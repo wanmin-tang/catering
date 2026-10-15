@@ -1,0 +1,919 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Заказ кейтеринга</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700&family=Unbounded:wght@500;600&display=swap">
+<style>
+/* Макет: три шага сверху; на шаге «Блюда» — каталог слева и закреплённая смета справа (на телефоне — нижняя панель). */
+:root {
+  --bg: #f4f6f3;
+  --surface: #ffffff;
+  --surface-2: #eef2ee;
+  --ink: #18201c;
+  --muted: #5d6862;
+  --line: #dde3de;
+  --line-strong: #c3ccc5;
+  --accent: #2c6a4c;
+  --accent-ink: #ffffff;
+  --accent-soft: #e2efe7;
+  --warn: #9a5b00;
+  --warn-soft: #fbf1e1;
+  --error: #b3261e;
+  --error-soft: #fcebea;
+  --shadow: 0 1px 2px rgba(24, 32, 28, .06), 0 8px 24px rgba(24, 32, 28, .06);
+  --font-display: "Unbounded", "Golos Text", system-ui, sans-serif;
+  --font-body: "Golos Text", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --radius: 12px;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #121714; --surface: #1a211d; --surface-2: #222b26; --ink: #e8eee9; --muted: #a2ada6;
+    --line: #2e3833; --line-strong: #3f4b44; --accent: #6fbf95; --accent-ink: #0f1a14; --accent-soft: #1f3529;
+    --warn: #e7b066; --warn-soft: #33281a; --error: #f2948d; --error-soft: #3a1f1d;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.25);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #121714; --surface: #1a211d; --surface-2: #222b26; --ink: #e8eee9; --muted: #a2ada6;
+  --line: #2e3833; --line-strong: #3f4b44; --accent: #6fbf95; --accent-ink: #0f1a14; --accent-soft: #1f3529;
+  --warn: #e7b066; --warn-soft: #33281a; --error: #f2948d; --error-soft: #3a1f1d;
+  --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.25);
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: 400 17px/1.5 var(--font-body);
+  font-variant-numeric: tabular-nums;
+}
+button, input, textarea, select { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; scroll-behavior: auto !important; } }
+
+.wrap {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding-left: max(20px, env(safe-area-inset-left, 0px));
+  padding-right: max(20px, env(safe-area-inset-right, 0px));
+}
+
+/* ---------- Шапка и шаги ---------- */
+.top { background: var(--surface); border-bottom: 1px solid var(--line); }
+.top .wrap { padding-block: 22px 0; display: grid; gap: 18px; }
+.brand { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 16px; }
+.brand h1 { margin: 0; font: 600 clamp(24px, 3.4vw, 32px)/1.15 var(--font-display); letter-spacing: -.01em; text-wrap: balance; }
+.brand p { margin: 0; color: var(--muted); font-size: 16px; }
+.steps { display: flex; gap: 4px; overflow-x: auto; margin-bottom: -1px; }
+.step {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 18px 14px; border: 0; background: none;
+  border-bottom: 3px solid transparent; color: var(--muted);
+  font-weight: 600; font-size: 16px; white-space: nowrap;
+}
+.step .n {
+  display: inline-grid; place-items: center; width: 28px; height: 28px; border-radius: 50%;
+  background: var(--surface-2); color: var(--muted); font-size: 14px;
+}
+.step[aria-current="step"] { color: var(--ink); border-bottom-color: var(--accent); }
+.step[aria-current="step"] .n { background: var(--accent); color: var(--accent-ink); }
+.step.done .n { background: var(--accent-soft); color: var(--accent); }
+.step:disabled { cursor: default; opacity: .55; }
+
+.demo-note {
+  background: var(--warn-soft); color: var(--warn); font-size: 15px;
+  border-bottom: 1px solid var(--line);
+}
+.demo-note .wrap { padding-block: 10px; }
+
+main .wrap { padding-block: 28px 120px; }
+h2.view-title { margin: 0 0 6px; font: 600 24px/1.2 var(--font-display); text-wrap: balance; }
+.view-lead { margin: 0 0 22px; color: var(--muted); max-width: 64ch; }
+
+/* ---------- Шаг 1: партнёры ---------- */
+.partners { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 22px; }
+.partner {
+  display: grid; gap: 2px; text-align: left; min-width: 180px;
+  padding: 14px 18px; border-radius: var(--radius);
+  background: var(--surface); border: 2px solid var(--line);
+}
+.partner b { font-size: 19px; font-weight: 700; }
+.partner span { font-size: 14px; color: var(--muted); }
+.partner[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); }
+.partner[aria-pressed="true"] span { color: var(--accent); }
+
+.switch-warning {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 12px;
+  padding: 14px 18px; margin: -8px 0 22px; border-radius: var(--radius);
+  background: var(--warn-soft); color: var(--ink);
+}
+
+.layout { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 28px; align-items: start; }
+
+.toolbar {
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5;
+  display: grid; gap: 12px; padding-block: 12px; margin-bottom: 8px;
+  background: var(--bg);
+}
+.search {
+  width: 100%; padding: 13px 16px; border-radius: var(--radius);
+  border: 1px solid var(--line-strong); background: var(--surface); font-size: 17px;
+}
+.chips { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 2px; scrollbar-width: thin; }
+.chip {
+  flex: none; padding: 8px 14px; border-radius: 999px; font-size: 15px; font-weight: 500;
+  border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink); white-space: nowrap;
+}
+.chip.active { background: var(--ink); border-color: var(--ink); color: var(--bg); }
+
+/* ---------- Категории и позиции ---------- */
+.category { margin-top: 26px; scroll-margin-top: 140px; }
+.category > h3 {
+  margin: 0 0 4px; padding: 14px 0 10px;
+  font: 600 21px/1.25 var(--font-display); letter-spacing: -.005em;
+  border-bottom: 2px solid var(--ink);
+  display: flex; justify-content: space-between; align-items: baseline; gap: 12px;
+}
+.category > h3 small { font: 500 14px var(--font-body); color: var(--muted); }
+.section-title {
+  margin: 18px 0 0; padding: 8px 0;
+  font-size: 13px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted);
+  border-bottom: 1px solid var(--line);
+}
+.items { list-style: none; margin: 0; padding: 0; }
+.item {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 10px 20px;
+  padding: 14px 0; border-bottom: 1px solid var(--line);
+}
+.item.picked { background: linear-gradient(90deg, var(--accent-soft), transparent 70%); margin-inline: -12px; padding-inline: 12px; border-radius: 8px; }
+.item-name { font-size: 17px; font-weight: 500; overflow-wrap: anywhere; }
+.item-meta { display: flex; flex-wrap: wrap; gap: 6px 12px; margin-top: 4px; font-size: 15px; color: var(--muted); }
+.item-price { font-weight: 600; color: var(--ink); }
+.tag { display: inline-block; padding: 1px 8px; border-radius: 6px; background: var(--warn-soft); color: var(--warn); font-size: 13px; font-weight: 600; }
+.item.info .item-name { color: var(--muted); }
+
+.qty { display: flex; align-items: center; gap: 6px; }
+.qty button, .add {
+  min-width: 44px; height: 44px; border-radius: 10px; border: 1px solid var(--line-strong);
+  background: var(--surface); font-size: 22px; font-weight: 500; line-height: 1;
+}
+.add { padding: 0 18px; font-size: 16px; font-weight: 600; color: var(--accent); border-color: var(--accent); }
+.qty input {
+  width: 68px; height: 44px; text-align: center; border-radius: 10px;
+  border: 1px solid var(--line-strong); background: var(--surface); font-size: 17px; font-weight: 600;
+}
+.qty.invalid input { border-color: var(--error); color: var(--error); background: var(--error-soft); }
+.qty-hint { grid-column: 1 / -1; margin-top: -4px; font-size: 14px; color: var(--error); }
+.empty-search { padding: 28px 0; color: var(--muted); }
+
+/* ---------- Смета (корзина) ---------- */
+.cart {
+  position: sticky; top: calc(env(safe-area-inset-top, 0px) + 16px);
+  background: var(--surface); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow);
+  display: grid; max-height: calc(100vh - 32px);
+}
+.cart-head { padding: 18px 20px 12px; border-bottom: 1px solid var(--line); }
+.cart-head h3 { margin: 0; font: 600 19px/1.2 var(--font-display); }
+.cart-head p { margin: 4px 0 0; color: var(--muted); font-size: 15px; }
+.cart-body { overflow-y: auto; padding: 4px 20px; min-height: 0; }
+.cart-line { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 12px; padding: 12px 0; border-bottom: 1px solid var(--line); font-size: 15px; }
+.cart-line:last-child { border-bottom: 0; }
+.cart-line .nm { font-weight: 500; overflow-wrap: anywhere; }
+.cart-line .sm { font-weight: 600; text-align: right; white-space: nowrap; }
+.cart-line .calc { color: var(--muted); }
+.cart-line .rm { justify-self: end; border: 0; background: none; color: var(--muted); font-size: 14px; text-decoration: underline; padding: 0; }
+.cart-line.bad .calc { color: var(--error); }
+.cart-empty { padding: 22px 0; color: var(--muted); font-size: 15px; }
+.cart-foot { padding: 16px 20px 20px; border-top: 1px solid var(--line); display: grid; gap: 12px; }
+.total { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+.total span { color: var(--muted); }
+.total b { font: 600 24px/1 var(--font-display); }
+
+.btn {
+  display: inline-flex; justify-content: center; align-items: center; gap: 8px;
+  min-height: 52px; padding: 0 24px; border-radius: 12px; border: 0;
+  background: var(--accent); color: var(--accent-ink); font-size: 17px; font-weight: 600;
+}
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+.btn.secondary { background: var(--surface); color: var(--ink); border: 1px solid var(--line-strong); }
+.btn.small { min-height: 40px; padding: 0 16px; font-size: 15px; }
+.btn-row { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 26px; }
+
+.mobile-bar { display: none; }
+
+/* ---------- Шаг 2: форма ---------- */
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 26px; max-width: 860px; }
+.fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px 24px; }
+.field { display: grid; gap: 6px; }
+.field.wide { grid-column: 1 / -1; }
+.field label { font-weight: 600; font-size: 16px; }
+.field label i { color: var(--error); font-style: normal; }
+.field input, .field textarea {
+  width: 100%; padding: 13px 14px; border-radius: 10px; border: 1px solid var(--line-strong);
+  background: var(--surface); font-size: 17px;
+}
+.field textarea { min-height: 96px; resize: vertical; }
+.field small { color: var(--muted); font-size: 14px; }
+.field.error input, .field.error textarea { border-color: var(--error); background: var(--error-soft); }
+.field .err { color: var(--error); font-size: 14px; }
+.pin-block { margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--line); max-width: 420px; }
+
+/* ---------- Шаг 3: проверка ---------- */
+.review { display: grid; gap: 24px; max-width: 980px; }
+.facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0; border: 1px solid var(--line); border-radius: 14px; overflow: hidden; background: var(--surface); }
+.fact { padding: 14px 18px; border-bottom: 1px solid var(--line); border-right: 1px solid var(--line); }
+.fact dt { font-size: 13px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+.fact dd { margin: 4px 0 0; font-weight: 500; overflow-wrap: anywhere; }
+.table-box { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; min-width: 620px; }
+th, td { padding: 12px 16px; text-align: left; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-size: 13px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); background: var(--surface-2); }
+td.num, th.num { text-align: right; white-space: nowrap; }
+td.n { color: var(--muted); width: 48px; }
+tr.cat td { background: var(--accent-soft); font: 600 16px var(--font-display); color: var(--ink); }
+tr.sec td { font-size: 13px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); padding-block: 8px; }
+tr.sum td { font-weight: 700; font-size: 18px; background: var(--surface-2); border-bottom: 0; }
+.alert { padding: 16px 18px; border-radius: 12px; background: var(--error-soft); color: var(--error); }
+.alert ul { margin: 6px 0 0; padding-left: 20px; }
+.ok-view { max-width: 640px; }
+.ok-badge { display: inline-grid; place-items: center; width: 56px; height: 56px; border-radius: 50%; background: var(--accent-soft); color: var(--accent); font-size: 28px; font-weight: 700; margin-bottom: 14px; }
+.links { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 18px; }
+.links a { color: var(--accent); font-weight: 600; }
+.loading { padding: 60px 0; color: var(--muted); }
+
+/* ---------- Телефон ---------- */
+@media (max-width: 960px) {
+  .layout { grid-template-columns: minmax(0, 1fr); }
+  .cart { position: static; max-height: none; }
+  .mobile-bar {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 20;
+    padding: 12px max(16px, env(safe-area-inset-right, 0px)) calc(12px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
+    background: var(--surface); border-top: 1px solid var(--line); box-shadow: 0 -6px 20px rgba(0,0,0,.08);
+  }
+  .mobile-bar .mt { display: grid; font-size: 14px; color: var(--muted); }
+  .mobile-bar .mt b { font: 600 19px var(--font-display); color: var(--ink); }
+  .mobile-bar .btn { min-height: 48px; padding: 0 18px; }
+}
+@media (max-width: 640px) {
+  body { font-size: 16px; }
+  .fields { grid-template-columns: minmax(0, 1fr); }
+  .panel { padding: 18px; }
+  .item { grid-template-columns: minmax(0, 1fr); }
+  .qty { justify-self: start; }
+  .partner { min-width: 0; flex: 1 1 140px; }
+  .step { padding-inline: 10px; }
+  .step .lbl-long { display: none; }
+}
+</style>
+</head>
+<body>
+
+
+<header class="top">
+  <div class="wrap">
+    <div class="brand">
+      <h1>Заказ кейтеринга</h1>
+      <p id="brand-sub">Выберите блюда, укажите данные мероприятия и отправьте заявку поставщику в Telegram.</p>
+    </div>
+    <nav class="steps" aria-label="Шаги заказа">
+      <button class="step" id="step-1" data-step="1" type="button"><span class="n">1</span>Блюда</button>
+      <button class="step" id="step-2" data-step="2" type="button"><span class="n">2</span><span>Детали</span></button>
+      <button class="step" id="step-3" data-step="3" type="button"><span class="n">3</span>Проверка <span class="lbl-long">&nbsp;и отправка</span></button>
+    </nav>
+  </div>
+</header>
+<div class="demo-note" id="demo-note" hidden>
+  <div class="wrap">Демо-режим: показано меню Рассвета из вашей таблицы, заявка никуда не отправляется. После подключения к таблице здесь появятся все партнёры.</div>
+</div>
+
+<main>
+  <div class="wrap" id="app"><div class="loading">Загружаем меню…</div></div>
+</main>
+
+<div class="mobile-bar" id="mobile-bar" hidden>
+  <div class="mt"><span id="mb-count">0 позиций</span><b id="mb-total">0 сум</b></div>
+  <button class="btn" id="mb-next" type="button">Дальше</button>
+</div>
+
+<script>
+/* Адрес веб-приложения Apps Script (…/exec). Пусто — демо-режим.
+   Можно также открыть сайт с параметром ?api=https://script.google.com/macros/s/…/exec */
+const API_URL = 'https://script.google.com/macros/s/AKfycbx2HLMVafG2U7iFSzhaNotXqhyItngW9tb5LT3aUhd0nnUqcCLTFS5N_VK-zOY6VAX-Fg/exec';
+
+const DEMO_MENU = {
+  requiresPin: false,
+  fields: [
+  { key: 'legal', label: 'Юридическое лицо', required: true, wide: true, placeholder: 'ТОО «Название компании»' },
+  { key: 'event', label: 'Название мероприятия', required: true, wide: true, placeholder: 'Корпоратив, конференция, день рождения…' },
+  { key: 'date', label: 'Дата мероприятия', required: true, type: 'date' },
+  { key: 'time', label: 'Время начала', required: true, type: 'time' },
+  { key: 'guests', label: 'Гостей, чел.', required: true, type: 'number', min: 1, placeholder: '50' },
+  { key: 'tables', label: 'Коктейльные столы, шт.', required: false, type: 'number', min: 0, placeholder: '0', hint: 'Если столы не нужны — оставьте пустым' },
+  { key: 'zone', label: 'Зона, в которой выставляем кейтеринг', required: true, wide: true, placeholder: 'Например: холл 2 этажа, у окна' },
+  { key: 'contact', label: 'Контактное лицо и телефон', required: true, wide: true, placeholder: 'Имя, +998 …' },
+  { key: 'comment', label: 'Комментарий', required: false, type: 'textarea', wide: true, hint: 'Тайминг, подходы, пожелания', placeholder: 'Например: 2 подхода — 19:00 и 21:00, горячее подавать в 20:30…' },
+  ],
+  partners: [{
+    name: 'Рассвет',
+    minQuantity: 1,
+    categories: [
+      { title: 'Выпечка', sections: [{ title: '', items: [
+        [5, 1, 'Мадлен лимонные', '', 18000], [6, 2, 'Мадлен с малиновой начинкой в бельгийском клубничном шоколаде', '', 30000],
+        [7, 3, 'Паштель де ната', '', 30000], [8, 4, 'Булочки с корицей', '', 25000], [9, 5, 'Печенье овсяное', '', 15000],
+        [10, 6, 'Печенье амаретти', '', 15000], [11, 7, 'Булочки с кардамоном', '', 35000], [12, 8, 'Сочник с творогом', '', 30000],
+        [13, 9, 'Орешки со сгущенкой печенье', '', 15000], [14, 10, 'Пирожки в ассортименте мини формат (картошка-грибы, мясо, яблоко и др)', '', 10000],
+        [15, 11, 'Лимонная тарталетка с меренгой', '', 40000], [16, 12, 'Маффин в ассортименте (яблоко-корица, морковный, голубика-лимон)', '', 45000],
+        [17, 13, 'Банана бред (1 кусок на 2 порции)', '', 45000], [18, 14, 'Печенье в ассортименте (по действующему меню)', '', 8000],
+        [19, 15, 'Ягодное ассорти сезонное (тарелка)', '', 400000],
+      ] }] },
+      { title: 'Закуски несладкие', sections: [{ title: '', items: [
+        [21, 16, 'Мини-круассан с лососем', '', 75000], [22, 17, 'Мини-круассан с ветчиной и сыром', '', 65000],
+        [23, 18, 'Мини-круассан с мортаделлой', '', 55000], [24, 19, 'Мини-круассан песто-моцарелла', '', 45000],
+        [25, 20, 'Салат с курицей и грейпфрутом (фуршетная сервировка)', '', 60000], [26, 21, 'Салат с тунцом (фуршетная сервировка)', '', 70000],
+        [27, 22, 'Оливье с бон-филе', 'Минимальный заказ 30 порций', 65000, 30], [28, 23, 'Мини-бриошь с ростбифом', 'Минимальный заказ 30 порций', 65000, 30],
+        [29, 24, 'Мини брускетта от шефа в ассортименте (согласно действительному меню)', 'Минимальный заказ 30 порций', 45000, 30],
+        [30, 25, 'Овощные палочки с соусом дипом', '', 20000], [31, 26, 'Сырная тарелка, мед, орехи (на 8 человек)', '', 500000],
+      ] }] },
+      { title: 'Напитки', sections: [{ title: '', items: [
+        [33, 27, 'Американо / Эспрессо', '', 35000], [34, 28, 'Капучино', '', 50000], [35, 29, 'Латте', '', 50000],
+        [36, 30, 'Флэт уайт', '', 45000], [37, 31, 'Раф ванильный', '', 50000], [38, 32, 'Раф цитрусовый', '', 55000],
+        [39, 33, 'Раф соленая карамель', '', 50000], [40, 34, 'Авторские сезонные напитки', '', 65000],
+        [41, 35, 'Лимонады в ассортименте сезонные', '', 50000], [42, 36, 'Чай в термосе 2л (пряная смородина, клюква-розмарин)', '', 260000],
+        [43, 37, 'Фильтр-кофе в термосе 2л', '', 300000], [44, 38, 'Соленая карамель', '', 8000], [45, 39, 'Альтернативное молоко доп', '', 15000],
+      ] }] },
+      { title: 'Накладные расходы и сервис', sections: [
+        { title: 'Одноразовая посуда', items: [
+          [48, 40, 'Стаканы 1 рукав (25 шт)', '', 75000], [49, 41, 'Тарелки упаковка (50 шт)', '', 85000], [50, 42, 'Салфетки (1 уп)', '', 15000],
+          [51, 43, 'Ложки, вилки, 1 комплект 20 шт', '', 60000],
+          [52, 44, 'Предоставление сервировочной посуды (подставки/корзины для выпечки, подносы для выкладки, фуршетные формочки)', '', 800000],
+          [53, 45, 'Трубочки, сахар порционный, 1 комплект 50 шт', '', 85000],
+        ] },
+        { title: 'Транспортные расходы', items: [
+          [55, 46, 'Доставка такси в пределах города (для продукции) в 1 сторону', '', 90000],
+          [56, 47, 'Услуги погрузки/разгрузки/подъема на этаж', '', 400000],
+          [57, 48, 'Доставка грузовая в пределах города (транспортировка оборудования) в 1 сторону', '', 400000],
+        ] },
+        { title: 'Аренда мебели', items: [[59, 49, 'Аренда фуршетной мебели', 'Цена: по запросу', null]] },
+        { title: 'Предоставление персонала и сервис', items: [
+          [61, 50, 'Работа бариста (приготовление кофе и напитков) на мероприятии (не более 6 часов)', '', 450000],
+          [62, 51, 'Аренда кофемашины и кофемолки на 1 день', '', 1900000], [63, 52, 'Аренда холодильника на 1 день', '', 750000],
+          [64, 53, 'Работа выделенного координатора (взаимодействие по запросу и организация мероприятия, включая переговоры со сторонними субподрядчиками и с заказчиком)', '', 500000],
+          [65, 54, 'Сервисное обслуживание на мероприятии', 'Цена: 15% от общего бюджета', null],
+        ] },
+      ] },
+    ],
+  }],
+};
+
+/* ================================ Состояние ================================ */
+const apiUrl = (() => {
+  try { return new URLSearchParams(location.search).get('api') || API_URL; } catch (e) { return API_URL; }
+})();
+const DEMO = !apiUrl;
+const STORE_KEY = 'catering-order-draft-v1';
+
+const state = {
+  menu: null,
+  step: 1,
+  partner: '',
+  qty: {},          // id → количество (строка из поля или число)
+  details: {},
+  pin: '',
+  search: '',
+  pendingPartner: '',
+  sending: false,
+  errors: [],
+  result: null,
+};
+
+const $ = id => document.getElementById(id);
+const fmt = n => Math.round(n).toLocaleString('ru-RU').replace(/ |\s/g, ' ');
+const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+function plural(n, one, few, many) {
+  const a = n % 10, b = n % 100;
+  if (a === 1 && b !== 11) return one;
+  if (a >= 2 && a <= 4 && (b < 12 || b > 14)) return few;
+  return many;
+}
+const positions = n => `${n} ${plural(n, 'позиция', 'позиции', 'позиций')}`;
+
+function save() {
+  try {
+    localStorage.setItem(STORE_KEY, JSON.stringify({ partner: state.partner, qty: state.qty, details: state.details, pin: state.pin }));
+  } catch (e) { /* хранилище недоступно — черновик не сохранится */ }
+}
+function restore() {
+  try {
+    const data = JSON.parse(localStorage.getItem(STORE_KEY) || '{}');
+    Object.assign(state, { partner: data.partner || '', qty: data.qty || {}, details: data.details || {}, pin: data.pin || '' });
+  } catch (e) { /* пусто */ }
+}
+
+/* ============================ Меню и расчёты ============================ */
+function normalizeMenu(menu) {
+  // Демо хранит позиции массивами; API отдаёт объекты. Приводим к одному виду.
+  menu.partners.forEach(p => p.categories.forEach(c => c.sections.forEach(s => {
+    s.items = s.items.map(it => Array.isArray(it)
+      ? { id: String(it[0]), number: it[1], name: it[2], extra: it[3], price: it[4], min: Math.max(it[5] || 0, p.minQuantity || 1) }
+      : Object.assign({}, it, { id: String(it.id), min: Math.max(it.min || 0, p.minQuantity || 1) }));
+  })));
+  return menu;
+}
+
+function currentPartner() {
+  return state.menu.partners.find(p => p.name === state.partner) || state.menu.partners[0];
+}
+
+function allItems(partner) {
+  const list = [];
+  partner.categories.forEach(c => c.sections.forEach(s => s.items.forEach(it => list.push({ item: it, category: c.title, section: s.title }))));
+  return list;
+}
+
+function lineState(item) {
+  const raw = state.qty[item.id];
+  if (raw === undefined || raw === '' || raw === 0) return null;
+  const n = Number(raw);
+  let problem = '';
+  if (!Number.isInteger(n) || n <= 0) problem = 'введите целое число';
+  else if (n < item.min) problem = `минимум ${item.min} шт.`;
+  return { qty: n, problem, sum: problem ? 0 : n * item.price };
+}
+
+function cartLines() {
+  const partner = currentPartner();
+  return allItems(partner)
+    .map(e => Object.assign(e, { line: e.item.price != null ? lineState(e.item) : null }))
+    .filter(e => e.line);
+}
+
+function totals() {
+  const lines = cartLines();
+  const bad = lines.filter(e => e.line.problem).length;
+  const sum = lines.reduce((t, e) => t + e.line.sum, 0);
+  return { lines, bad, sum, count: lines.length };
+}
+
+/* ================================ Отрисовка ================================ */
+function render() {
+  ['1', '2', '3'].forEach(n => {
+    const b = $(`step-${n}`);
+    b.setAttribute('aria-current', String(state.step) === n && !state.result ? 'step' : 'false');
+    b.classList.toggle('done', Number(n) < state.step || Boolean(state.result));
+  });
+  const t = totals();
+  $('step-2').disabled = !t.count || t.bad > 0 || Boolean(state.result);
+  $('step-3').disabled = $('step-2').disabled || !detailsValid().ok;
+  $('step-1').disabled = Boolean(state.result);
+
+  if (state.result) return renderDone();
+  if (state.step === 1) renderCatalog();
+  if (state.step === 2) renderDetails();
+  if (state.step === 3) renderReview();
+  updateMobileBar();
+}
+
+function renderCatalog() {
+  const partner = currentPartner();
+  const t = totals();
+  const multi = state.menu.partners.length > 1;
+
+  $('app').innerHTML = `
+    <h2 class="view-title">Шаг 1. Выберите блюда</h2>
+    <p class="view-lead">Нажмите «Добавить» у нужной позиции и укажите количество. Справа собирается смета — её увидит поставщик.</p>
+    ${multi ? `<div class="partners" role="group" aria-label="Партнёр">${state.menu.partners.map(p => `
+      <button class="partner" type="button" data-partner="${esc(p.name)}" aria-pressed="${p.name === partner.name}">
+        <b>${esc(p.name)}</b><span>${p.minQuantity > 1 ? `заказ от ${p.minQuantity} шт. каждой позиции` : 'любое количество'}</span>
+      </button>`).join('')}</div>` : `<div class="partners"><div class="partner" aria-pressed="true"><b>${esc(partner.name)}</b><span>${partner.minQuantity > 1 ? `заказ от ${partner.minQuantity} шт. каждой позиции` : 'любое количество'}</span></div></div>`}
+    <div id="switch-slot"></div>
+    <div class="layout">
+      <section aria-label="Меню ${esc(partner.name)}">
+        <div class="toolbar">
+          <input class="search" id="search" type="search" placeholder="Поиск по меню ${esc(partner.name)}" value="${esc(state.search)}" autocomplete="off">
+          <div class="chips" id="chips">${partner.categories.map((c, i) => `<button class="chip" type="button" data-jump="cat-${i}">${esc(c.title)}</button>`).join('')}</div>
+        </div>
+        <div id="catalog"></div>
+      </section>
+      <aside class="cart" id="cart" aria-label="Смета"></aside>
+    </div>`;
+
+  renderSwitchWarning();
+  renderItems();
+  renderCart();
+
+  $('search').addEventListener('input', e => { state.search = e.target.value; renderItems(); });
+}
+
+function renderSwitchWarning() {
+  const slot = $('switch-slot');
+  if (!slot) return;
+  if (!state.pendingPartner) { slot.innerHTML = ''; return; }
+  slot.innerHTML = `<div class="switch-warning" role="alert">
+    <span>В заявке уже есть позиции <b>${esc(state.partner)}</b>. В одной заявке — только один партнёр.</span>
+    <button class="btn small" type="button" data-confirm-switch>Очистить и перейти к ${esc(state.pendingPartner)}</button>
+    <button class="btn small secondary" type="button" data-cancel-switch>Остаться</button>
+  </div>`;
+}
+
+function renderItems() {
+  const partner = currentPartner();
+  const q = state.search.trim().toLowerCase();
+  let shown = 0;
+
+  const html = partner.categories.map((c, ci) => {
+    const sections = c.sections.map(s => {
+      const items = s.items.filter(it => !q || `${it.name} ${it.extra || ''}`.toLowerCase().includes(q));
+      if (!items.length) return '';
+      shown += items.length;
+      return `${s.title ? `<div class="section-title">${esc(s.title)}</div>` : ''}
+        <ul class="items">${items.map(itemHtml).join('')}</ul>`;
+    }).join('');
+    if (!sections) return '';
+    const count = c.sections.reduce((n, s) => n + s.items.filter(it => it.price != null).length, 0);
+    return `<div class="category" id="cat-${ci}"><h3>${esc(c.title)} <small>${positions(count)}</small></h3>${sections}</div>`;
+  }).join('');
+
+  $('catalog').innerHTML = shown ? html : `<p class="empty-search">Ничего не нашлось по запросу «${esc(state.search)}».</p>`;
+}
+
+function itemHtml(it) {
+  if (it.price == null) {
+    return `<li class="item info"><div><div class="item-name">${esc(it.name)}</div>
+      <div class="item-meta">${esc(it.extra || 'Цена по запросу')} · уточните у поставщика в комментарии</div></div></li>`;
+  }
+  const line = lineState(it);
+  const minTag = it.min > 1 ? `<span class="tag">от ${it.min} шт.</span>` : '';
+  const extra = it.extra && !/минимальн/i.test(it.extra) ? `<span>${esc(it.extra)}</span>` : '';
+  const control = line
+    ? `<div class="qty${line.problem ? ' invalid' : ''}">
+        <button type="button" data-dec="${it.id}" aria-label="Меньше">−</button>
+        <input id="q-${it.id}" inputmode="numeric" data-qty="${it.id}" value="${esc(state.qty[it.id])}" aria-label="Количество: ${esc(it.name)}">
+        <button type="button" data-inc="${it.id}" aria-label="Больше">+</button>
+      </div>`
+    : `<button class="add" type="button" data-add="${it.id}">Добавить</button>`;
+
+  return `<li class="item${line && !line.problem ? ' picked' : ''}" data-row="${it.id}">
+    <div>
+      <div class="item-name">${esc(it.name)}</div>
+      <div class="item-meta"><span class="item-price">${fmt(it.price)} сум</span>${minTag}${extra}</div>
+    </div>
+    ${control}
+    ${line && line.problem ? `<div class="qty-hint">${esc(line.problem)}</div>` : ''}
+  </li>`;
+}
+
+function refreshItem(id) {
+  const li = document.querySelector(`.item[data-row="${CSS.escape(id)}"]`);
+  const it = findItem(id);
+  if (!li || !it) return;
+  const focused = document.activeElement && document.activeElement.dataset.qty === id;
+  const tmp = document.createElement('ul');
+  tmp.innerHTML = itemHtml(it);
+  li.replaceWith(tmp.firstElementChild);
+  if (focused) {
+    const input = $(`q-${id}`);
+    if (input) { input.focus(); input.setSelectionRange(input.value.length, input.value.length); }
+  }
+}
+
+function findItem(id) {
+  const found = allItems(currentPartner()).find(e => e.item.id === String(id));
+  return found && found.item;
+}
+
+function renderCart() {
+  const box = $('cart');
+  if (!box) return;
+  const t = totals();
+  const partner = currentPartner();
+
+  box.innerHTML = `
+    <div class="cart-head"><h3>Смета · ${esc(partner.name)}</h3>
+      <p>${t.count ? `${positions(t.count)}${t.bad ? ` · исправьте: ${t.bad}` : ''}` : 'Пока пусто'}</p></div>
+    <div class="cart-body">${t.count ? t.lines.map(e => `
+      <div class="cart-line${e.line.problem ? ' bad' : ''}">
+        <span class="nm">${esc(e.item.name)}</span>
+        <span class="sm">${e.line.problem ? '—' : `${fmt(e.line.sum)}`}</span>
+        <span class="calc">${e.line.problem ? esc(e.line.problem) : `${e.line.qty} × ${fmt(e.item.price)}`}</span>
+        <button class="rm" type="button" data-remove="${e.item.id}">убрать</button>
+      </div>`).join('') : '<p class="cart-empty">Добавьте позиции из меню — здесь появится смета с суммой по каждой строке.</p>'}</div>
+    <div class="cart-foot">
+      <div class="total"><span>Итого</span><b>${fmt(t.sum)} сум</b></div>
+      <button class="btn" type="button" data-go="2" ${!t.count || t.bad ? 'disabled' : ''}>Дальше: данные мероприятия</button>
+      ${t.count ? '<button class="btn small secondary" type="button" data-clear>Очистить смету</button>' : ''}
+    </div>`;
+}
+
+function updateMobileBar() {
+  const bar = $('mobile-bar');
+  const t = totals();
+  bar.hidden = state.step !== 1 || Boolean(state.result) || !state.menu;
+  $('mb-count').textContent = t.count ? positions(t.count) : 'Смета пуста';
+  $('mb-total').textContent = `${fmt(t.sum)} сум`;
+  $('mb-next').disabled = !t.count || t.bad > 0;
+}
+
+/* ------------------------------ Шаг 2 ------------------------------ */
+function detailsValid() {
+  const errors = {};
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  (state.menu ? state.menu.fields : []).forEach(f => {
+    const v = String(state.details[f.key] || '').trim();
+    if (!v) { if (f.required) errors[f.key] = 'Заполните поле'; return; }
+    if (f.type === 'number') {
+      const min = f.min == null ? 1 : f.min;
+      if (!(Number.isInteger(Number(v)) && Number(v) >= min)) errors[f.key] = min > 0 ? `Нужно целое число от ${min}` : 'Нужно целое число';
+    }
+    if (f.type === 'time' && !/^\d{1,2}:\d{2}/.test(v)) errors[f.key] = 'Укажите время';
+    if (f.type === 'date') {
+      const d = new Date(`${v}T00:00:00`);
+      if (isNaN(d)) errors[f.key] = 'Выберите дату';
+      else if (d < today) errors[f.key] = 'Дата уже прошла';
+    }
+  });
+  if (state.menu && state.menu.requiresPin && !String(state.pin).trim()) errors.__pin = 'Введите код доступа';
+  return { ok: !Object.keys(errors).length, errors };
+}
+
+function renderDetails(showErrors) {
+  const v = detailsValid();
+  const err = key => showErrors && v.errors[key];
+
+  $('app').innerHTML = `
+    <h2 class="view-title">Шаг 2. Реквизиты и детали мероприятия</h2>
+    <p class="view-lead">Поставщик увидит их в Telegram вместе со сметой. Поля со звёздочкой обязательны.</p>
+    <form class="panel" id="details-form" novalidate>
+      <div class="fields">${state.menu.fields.map(f => {
+        const id = `f-${f.key}`;
+        const value = esc(state.details[f.key] || '');
+        const placeholder = f.placeholder ? ` placeholder="${esc(f.placeholder)}"` : '';
+        const type = ['date', 'time', 'number'].indexOf(f.type) >= 0 ? f.type : 'text';
+        const number = f.type === 'number' ? ` min="${f.min == null ? 1 : f.min}" step="1" inputmode="numeric"` : '';
+        const input = f.type === 'textarea'
+          ? `<textarea id="${id}" data-field="${f.key}"${placeholder}>${value}</textarea>`
+          : `<input id="${id}" data-field="${f.key}" type="${type}"${number}${placeholder} value="${value}">`;
+        return `<div class="field${f.wide || f.type === 'textarea' ? ' wide' : ''}${err(f.key) ? ' error' : ''}">
+          <label for="${id}">${esc(f.label)}${f.required ? ' <i>*</i>' : ''}</label>${input}
+          ${err(f.key) ? `<span class="err">${esc(v.errors[f.key])}</span>` : f.hint ? `<small>${esc(f.hint)}</small>` : ''}
+        </div>`;
+      }).join('')}</div>
+      ${state.menu.requiresPin ? `<div class="pin-block field${err('__pin') ? ' error' : ''}">
+        <label for="f-pin">Код доступа <i>*</i></label>
+        <input id="f-pin" data-pin type="password" autocomplete="off" value="${esc(state.pin)}">
+        ${err('__pin') ? `<span class="err">${esc(v.errors.__pin)}</span>` : '<small>Выдаёт администратор. Запомнится в этом браузере.</small>'}
+      </div>` : ''}
+      <div class="btn-row">
+        <button class="btn secondary" type="button" data-go="1">← К блюдам</button>
+        <button class="btn" type="submit">Дальше: проверка</button>
+      </div>
+    </form>`;
+
+  $('details-form').addEventListener('submit', e => {
+    e.preventDefault();
+    if (detailsValid().ok) go(3); else renderDetails(true);
+  });
+}
+
+/* ------------------------------ Шаг 3 ------------------------------ */
+function displayValue(f) {
+  const v = String(state.details[f.key] || '').trim();
+  if (f.type === 'date' && v) { const [y, m, d] = v.split('-'); return `${d}.${m}.${y}`; }
+  return v;
+}
+
+function estimateRows(lines) {
+  let cat = null, sec = null;
+  const rows = [];
+  lines.forEach(e => {
+    if (e.category !== cat) { cat = e.category; sec = null; rows.push(`<tr class="cat"><td colspan="5">${esc(cat)}</td></tr>`); }
+    if (e.section !== sec) { sec = e.section; if (sec) rows.push(`<tr class="sec"><td colspan="5">${esc(sec)}</td></tr>`); }
+    rows.push(`<tr><td class="n">${esc(e.item.number)}</td><td>${esc(e.item.name)}</td>
+      <td class="num">${fmt(e.item.price)}</td><td class="num">${e.line.qty}</td><td class="num"><b>${fmt(e.line.sum)}</b></td></tr>`);
+  });
+  return rows.join('');
+}
+
+function renderReview() {
+  const t = totals();
+  const partner = currentPartner();
+
+  $('app').innerHTML = `
+    <h2 class="view-title">Шаг 3. Проверьте и отправьте</h2>
+    <p class="view-lead">Так заявку увидит поставщик. После отправки в его Telegram-чат придут сообщение с составом и смета в Excel.</p>
+    <div class="review">
+      <dl class="facts">
+        <div class="fact"><dt>Поставщик</dt><dd>${esc(partner.name)}</dd></div>
+        ${state.menu.fields.filter(f => displayValue(f) && !(f.type === 'number' && !f.required && Number(displayValue(f)) === 0)).map(f => `<div class="fact"><dt>${esc(f.label)}</dt><dd>${esc(displayValue(f))}</dd></div>`).join('')}
+      </dl>
+      <div class="table-box">
+        <table>
+          <thead><tr><th>№</th><th>Наименование</th><th class="num">Цена, сум</th><th class="num">Кол-во</th><th class="num">Сумма, сум</th></tr></thead>
+          <tbody>${estimateRows(t.lines)}
+            <tr class="sum"><td></td><td>Итого · ${positions(t.count)}</td><td></td><td class="num">${t.lines.reduce((n, e) => n + e.line.qty, 0)}</td><td class="num">${fmt(t.sum)}</td></tr>
+          </tbody>
+        </table>
+      </div>
+      ${state.errors.length ? `<div class="alert" role="alert"><b>Заявка не отправлена.</b>
+        <ul>${state.errors.map(e => `<li>${esc(e)}</li>`).join('')}</ul></div>` : ''}
+      <div class="btn-row" style="margin-top:0">
+        <button class="btn secondary" type="button" data-go="2">← Изменить данные</button>
+        <button class="btn secondary" type="button" data-go="1">← Изменить блюда</button>
+        <button class="btn" type="button" id="send" ${state.sending ? 'disabled' : ''}>${state.sending ? 'Отправляем…' : `Отправить ${esc(partner.name)} · ${fmt(t.sum)} сум`}</button>
+      </div>
+    </div>`;
+
+  $('send').addEventListener('click', send);
+}
+
+function renderDone() {
+  const r = state.result;
+  $('app').innerHTML = `<div class="ok-view panel">
+    <div class="ok-badge" aria-hidden="true">✓</div>
+    <h2 class="view-title">${r.demo ? 'Демо: заявка собрана' : 'Заявка отправлена'}</h2>
+    <p class="view-lead" style="margin-bottom:0">${r.demo
+      ? 'В демо-режиме ничего не отправляется. После подключения к таблице заявка уйдёт в Telegram-чат поставщика.'
+      : `Поставщик <b>${esc(r.partner)}</b> получил заявку в Telegram: ${positions(r.positions)} на ${fmt(r.total)} сум.`}</p>
+    ${r.pdfUrl || r.xlsxUrl ? `<div class="links">${r.pdfUrl ? `<a href="${esc(r.pdfUrl)}" target="_blank" rel="noopener">Открыть смету (PDF)</a>` : ''}${r.xlsxUrl ? `<a href="${esc(r.xlsxUrl)}" target="_blank" rel="noopener">Скачать Excel</a>` : ''}</div>` : ''}
+    <div class="btn-row"><button class="btn" type="button" data-new>Новая заявка</button></div>
+  </div>`;
+  $('mobile-bar').hidden = true;
+}
+
+/* ================================ Действия ================================ */
+function go(step) {
+  const t = totals();
+  if (step >= 2 && (!t.count || t.bad)) step = 1;
+  if (step === 3 && !detailsValid().ok) { state.step = 2; render(); renderDetails(true); return; }
+  state.step = step;
+  state.errors = [];
+  render();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function setQty(id, value) {
+  if (value === '' || value === 0 || value === null) delete state.qty[id];
+  else state.qty[id] = value;
+  save();
+  refreshItem(id);
+  renderCart();
+  updateMobileBar();
+}
+
+async function send() {
+  const t = totals();
+  if (state.sending || !t.count || t.bad) return;
+  state.sending = true;
+  state.errors = [];
+  renderReview();
+
+  const partner = currentPartner();
+  const details = {};
+  state.menu.fields.forEach(f => { details[f.key] = String(state.details[f.key] || '').trim(); });
+
+  try {
+    let result;
+    if (DEMO) {
+      await new Promise(r => setTimeout(r, 700));
+      result = { ok: true, demo: true };
+    } else {
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({
+          action: 'order',
+          pin: state.pin,
+          partner: partner.name,
+          items: t.lines.map(e => ({ id: e.item.id, name: e.item.name, quantity: e.line.qty })),
+          details,
+        }),
+      });
+      result = await response.json();
+    }
+
+    if (!result.ok) {
+      state.errors = result.errors && result.errors.length ? result.errors : [result.message || 'Неизвестная ошибка'];
+    } else {
+      state.result = Object.assign({ partner: partner.name, positions: t.count, total: t.sum }, result);
+      state.qty = {};
+      state.details = {};
+      save();
+    }
+  } catch (error) {
+    state.errors = ['Нет связи с таблицей. Проверьте интернет и попробуйте ещё раз через минуту.'];
+  } finally {
+    state.sending = false;
+    render();
+  }
+}
+
+document.addEventListener('click', e => {
+  const t = e.target.closest('button');
+  if (!t) return;
+  const d = t.dataset;
+
+  if (d.step) { go(Number(d.step)); return; }
+  if (d.go) { go(Number(d.go)); return; }
+
+  if (d.add) { const it = findItem(d.add); setQty(d.add, it.min); return; }
+  if (d.inc) { const it = findItem(d.inc); const n = Number(state.qty[d.inc]) || 0; setQty(d.inc, Number.isInteger(n) && n >= it.min ? n + 1 : it.min); return; }
+  if (d.dec) { const it = findItem(d.dec); const n = Number(state.qty[d.dec]) || 0; setQty(d.dec, n - 1 >= it.min ? n - 1 : ''); return; }
+  if (d.remove) { setQty(d.remove, ''); return; }
+  if (d.clear !== undefined) { state.qty = {}; save(); renderItems(); renderCart(); updateMobileBar(); return; }
+
+  if (d.jump) { const el = $(d.jump); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); return; }
+
+  if (d.partner) {
+    if (d.partner === state.partner) return;
+    if (totals().count) { state.pendingPartner = d.partner; renderSwitchWarning(); return; }
+    state.partner = d.partner; state.search = ''; save(); renderCatalog(); updateMobileBar(); return;
+  }
+  if (d.confirmSwitch !== undefined) {
+    state.qty = {}; state.partner = state.pendingPartner; state.pendingPartner = ''; state.search = '';
+    save(); renderCatalog(); updateMobileBar(); return;
+  }
+  if (d.cancelSwitch !== undefined) { state.pendingPartner = ''; renderSwitchWarning(); return; }
+
+  if (d.new !== undefined) { state.result = null; state.step = 1; render(); window.scrollTo({ top: 0 }); }
+});
+
+document.addEventListener('input', e => {
+  const el = e.target;
+  if (el.dataset.qty) {
+    const id = el.dataset.qty;
+    const v = el.value.replace(/[^\d]/g, '');
+    if (v === '') { state.qty[id] = ''; } else state.qty[id] = Number(v);
+    save();
+    const it = findItem(id);
+    const line = lineState(it);
+    const box = el.closest('.qty');
+    box.classList.toggle('invalid', Boolean(line && line.problem));
+    renderCart(); updateMobileBar();
+    return;
+  }
+  if (el.dataset.field) { state.details[el.dataset.field] = el.value; save(); render2Steps(); return; }
+  if (el.dataset.pin !== undefined) { state.pin = el.value; save(); render2Steps(); }
+});
+
+document.addEventListener('change', e => {
+  if (e.target.dataset.qty) {
+    const id = e.target.dataset.qty;
+    if (state.qty[id] === '' || state.qty[id] === 0) delete state.qty[id];
+    save(); refreshItem(id); renderCart(); updateMobileBar();
+  }
+});
+
+function render2Steps() {
+  $('step-3').disabled = !totals().count || totals().bad > 0 || !detailsValid().ok;
+}
+
+$('mb-next').addEventListener('click', () => {
+  const t = totals();
+  if (t.count && !t.bad) go(2);
+});
+
+/* ================================ Запуск ================================ */
+async function start() {
+  restore();
+  $('demo-note').hidden = !DEMO;
+  try {
+    let menu;
+    if (DEMO) {
+      menu = JSON.parse(JSON.stringify(DEMO_MENU));
+      // Пример выбора, чтобы демо открылось в рабочем виде.
+      if (!Object.keys(state.qty).length) state.qty = { 6: 20, 21: 10, 34: 20, 48: 2 };
+    } else {
+      const response = await fetch(`${apiUrl}?action=menu`);
+      menu = await response.json();
+      if (menu.ok === false) throw new Error(menu.message || 'ошибка меню');
+    }
+    if (!menu.partners || !menu.partners.length) {
+      throw new Error('в ответе таблицы нет ни одного партнёра. Проверьте лист «Меню» и опубликуйте новую версию веб-приложения');
+    }
+    state.menu = normalizeMenu(menu);
+    if (!state.menu.partners.some(p => p.name === state.partner)) { state.partner = state.menu.partners[0].name; state.qty = DEMO ? state.qty : {}; }
+    // Убираем из черновика позиции, которых больше нет в меню.
+    const ids = new Set(allItems(currentPartner()).map(e => e.item.id));
+    Object.keys(state.qty).forEach(id => { if (!ids.has(id)) delete state.qty[id]; });
+    render();
+  } catch (error) {
+    $('app').innerHTML = `<div class="alert" role="alert"><b>Не удалось загрузить меню.</b><br>
+      Обновите страницу через минуту. Если не помогает — сообщите администратору (${esc(error.message)}).</div>`;
+  }
+}
+start();
+</script>
+
+</body>
+</html>
