@@ -426,8 +426,8 @@ function normalizeMenu(menu) {
   // Демо хранит позиции массивами; API отдаёт объекты. Приводим к одному виду.
   menu.partners.forEach(p => p.categories.forEach(c => c.sections.forEach(s => {
     s.items = s.items.map(it => Array.isArray(it)
-      ? { id: String(it[0]), number: it[1], name: it[2], extra: it[3], price: it[4], min: Math.max(it[5] || 0, p.minQuantity || 1) }
-      : Object.assign({}, it, { id: String(it.id), min: Math.max(it.min || 0, p.minQuantity || 1) }));
+      ? { id: String(it[0]), number: it[1], name: it[2], extra: it[3], price: it[4], min: it[5] || p.minQuantity || 1, step: it[6] || 1 }
+      : Object.assign({}, it, { id: String(it.id), min: it.min || p.minQuantity || 1, step: it.step || 1 }));
   })));
   return menu;
 }
@@ -449,6 +449,7 @@ function lineState(item) {
   let problem = '';
   if (!Number.isInteger(n) || n <= 0) problem = 'введите целое число';
   else if (n < item.min) problem = `минимум ${item.min} шт.`;
+  else if (n % item.step) problem = `только кратно ${item.step}: ${Math.floor(n / item.step) * item.step || item.step} или ${Math.ceil(n / item.step) * item.step}`;
   return { qty: n, problem, sum: problem ? 0 : n * item.price };
 }
 
@@ -554,7 +555,8 @@ function itemHtml(it) {
       <div class="item-meta">${esc(it.extra || 'Цена по запросу')} · уточните у поставщика в комментарии</div></div></li>`;
   }
   const line = lineState(it);
-  const minTag = it.min > 1 ? `<span class="tag">от ${it.min} шт.</span>` : '';
+  const minTag = (it.min > 1 ? `<span class="tag">от ${it.min} шт.</span>` : '') +
+    (it.step > 1 ? `<span class="tag">кратно ${it.step}</span>` : '');
   const extra = it.extra && !/минимальн/i.test(it.extra) ? `<span>${esc(it.extra)}</span>` : '';
   const control = line
     ? `<div class="qty${line.problem ? ' invalid' : ''}">
@@ -827,8 +829,16 @@ document.addEventListener('click', e => {
   if (d.go) { go(Number(d.go)); return; }
 
   if (d.add) { const it = findItem(d.add); setQty(d.add, it.min); return; }
-  if (d.inc) { const it = findItem(d.inc); const n = Number(state.qty[d.inc]) || 0; setQty(d.inc, Number.isInteger(n) && n >= it.min ? n + 1 : it.min); return; }
-  if (d.dec) { const it = findItem(d.dec); const n = Number(state.qty[d.dec]) || 0; setQty(d.dec, n - 1 >= it.min ? n - 1 : ''); return; }
+  if (d.inc) {
+    const it = findItem(d.inc); const n = Number(state.qty[d.inc]) || 0;
+    const next = Number.isInteger(n) && n >= it.min ? (Math.floor(n / it.step) + 1) * it.step : it.min;
+    setQty(d.inc, next); return;
+  }
+  if (d.dec) {
+    const it = findItem(d.dec); const n = Number(state.qty[d.dec]) || 0;
+    const prev = (Math.ceil(n / it.step) - 1) * it.step;
+    setQty(d.dec, prev >= it.min ? prev : ''); return;
+  }
   if (d.remove) { setQty(d.remove, ''); return; }
   if (d.clear !== undefined) { state.qty = {}; save(); renderItems(); renderCart(); updateMobileBar(); return; }
 
