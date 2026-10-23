@@ -308,6 +308,30 @@ tr.sum td { font-weight: 700; font-size: 18px; background: var(--surface-2); bor
   .step { padding-inline: 10px; }
   .step .lbl-long { display: none; }
 }
+.boxes { display: grid; gap: 14px; padding: 18px 20px; margin-bottom: 22px; border-radius: 16px; border: 1px solid var(--line-strong); background: var(--surface); }
+.boxes-head { display: flex; gap: 16px; justify-content: space-between; align-items: center; flex-wrap: wrap; }
+.boxes-head h3 { margin: 0 0 4px; font: 600 18px/1.25 var(--font-display); }
+.boxes-head p { margin: 0; color: var(--muted); max-width: 560px; }
+.box-cards { display: grid; gap: 10px; }
+.box-card { display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: center; padding: 12px 14px; border-radius: 12px; border: 1px solid var(--line); background: var(--bg); }
+.box-card.open { border-color: var(--accent); background: var(--accent-soft); }
+.box-card.bad { border-color: var(--warn); }
+.box-main { display: grid; gap: 3px; text-align: left; background: none; border: 0; padding: 0; color: inherit; font: inherit; cursor: pointer; min-width: 0; }
+.box-main span { color: var(--muted); font-size: 14px; }
+.box-list { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.box-main .box-problem { color: var(--warn); font-weight: 600; }
+.box-tools { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; justify-content: flex-end; }
+.box-sum { font-weight: 700; min-width: 90px; text-align: right; }
+.link { background: none; border: 0; padding: 4px; color: var(--accent); font: inherit; font-size: 14px; text-decoration: underline; cursor: pointer; }
+.box-editor { display: grid; gap: 12px; padding-top: 14px; border-top: 1px solid var(--line); }
+.box-editor-head { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; position: sticky; top: 0; }
+.box-progress { flex: 1; min-width: 120px; height: 8px; border-radius: 99px; background: var(--line); overflow: hidden; }
+.box-progress i { display: block; height: 100%; background: var(--accent); }
+.box-groups { max-height: 60vh; overflow: auto; padding-right: 4px; }
+.check { display: flex; gap: 10px; align-items: center; font-weight: 500; }
+.check input { width: 20px; height: 20px; accent-color: var(--accent); }
+.muted { color: var(--muted); font-weight: 400; }
+@media (max-width: 640px) { .box-card { grid-template-columns: 1fr; } .box-tools { justify-content: space-between; } }
 </style>
 </head>
 <body>
@@ -368,6 +392,8 @@ const DEMO_MENU = {
   partners: [{
     name: 'Рассвет',
     minQuantity: 1,
+    box: { capacity: 20 },
+    boxCategories: ['Выпечка', 'Закуски несладкие'],
     categories: [
       { title: 'Выпечка', sections: [{ title: '', items: [
         [5, 1, 'Мадлен лимонные', '', 18000], [6, 2, 'Мадлен с малиновой начинкой в бельгийском клубничном шоколаде', '', 30000],
@@ -431,6 +457,9 @@ const state = {
   qty: {},          // id → количество
   details: {},      // поля шагов 1 и 3
   approaches: [{ tags: [], note: '', time: '' }],
+  boxes: [],        // [{count, items: {id → штук в боксе}}]
+  openBox: -1,
+  boxSearch: '',
   pin: '',
   search: '',
   pendingPartner: '',
@@ -438,8 +467,9 @@ const state = {
   errors: [],
   showErrors: false,
   result: null,
-  ai: { loading: false, comment: '', error: '', confirm: false },
+  ai: { loading: false, comment: '', error: '', confirm: false, useBoxes: false },
 };
+const resetAi = () => { state.ai = { loading: false, comment: '', error: '', confirm: false, useBoxes: state.ai.useBoxes }; };
 
 const $ = id => document.getElementById(id);
 const fmt = n => Math.round(n).toLocaleString('ru-RU').replace(/ |\s/g, ' ');
@@ -456,7 +486,7 @@ const positions = n => `${n} ${plural(n, 'позиция', 'позиции', 'п
 function save() {
   try {
     localStorage.setItem(STORE_KEY, JSON.stringify({
-      partner: state.partner, qty: state.qty, details: state.details, approaches: state.approaches, pin: state.pin,
+      partner: state.partner, qty: state.qty, details: state.details, approaches: state.approaches, pin: state.pin, boxes: state.boxes,
     }));
   } catch (e) { /* хранилище недоступно — черновик не сохранится */ }
 }
@@ -466,6 +496,7 @@ function restore() {
     Object.assign(state, {
       partner: data.partner || '', qty: data.qty || {}, details: data.details || {}, pin: data.pin || '',
       approaches: Array.isArray(data.approaches) && data.approaches.length ? data.approaches : state.approaches,
+      boxes: Array.isArray(data.boxes) ? data.boxes : [],
     });
   } catch (e) { /* пусто */ }
 }
@@ -475,7 +506,8 @@ function normalizeMenu(menu) {
   // Демо хранит позиции массивами; API отдаёт объекты. Приводим к одному виду.
   menu.partners.forEach(p => p.categories.forEach(c => c.sections.forEach(s => {
     s.items = s.items.map(it => Array.isArray(it)
-      ? { id: String(it[0]), number: it[1], name: it[2], extra: it[3], price: it[4], min: it[5] || p.minQuantity || 1, step: it[6] || 1 }
+      ? { id: String(it[0]), number: it[1], name: it[2], extra: it[3], price: it[4], min: it[5] || p.minQuantity || 1, step: it[6] || 1,
+          box: Boolean(p.box && (p.boxCategories || []).indexOf(c.title) >= 0 && it[4]) }
       : Object.assign({}, it, { id: String(it.id), min: it.min || p.minQuantity || 1, step: it.step || 1 }));
   })));
   menu.approachTags = menu.approachTags || [];
@@ -507,14 +539,31 @@ function cartLines() {
     .map(e => Object.assign(e, { line: e.item.price != null ? lineState(e.item) : null }))
     .filter(e => e.line);
 }
+function boxesAvailable(partner) { return Boolean((partner || currentPartner()).box) && !wantsWaiters(); }
+function boxCapacity() { const b = currentPartner().box; return b ? b.capacity : 0; }
+function boxState(box) {
+  const lines = Object.keys(box.items).map(id => ({ item: findItem(id), perBox: Number(box.items[id]) }))
+    .filter(l => l.item && l.perBox > 0).sort((a, b) => Number(a.item.id) - Number(b.item.id));
+  const filled = lines.reduce((n, l) => n + l.perBox, 0);
+  const unit = lines.reduce((n, l) => n + l.perBox * l.item.price, 0);
+  const cap = boxCapacity();
+  const count = Number(box.count);
+  let problem = '';
+  if (!boxesAvailable()) problem = 'боксы — только без официантов';
+  else if (filled < cap) problem = `добавьте ещё ${cap - filled} шт.`;
+  else if (filled > cap) problem = `уберите ${filled - cap} шт.`;
+  else if (!Number.isInteger(count) || count < 1) problem = 'укажите количество боксов';
+  return { lines, filled, unit, count: count || 0, total: problem ? 0 : unit * count, problem };
+}
 function totals() {
   const lines = cartLines();
-  const bad = lines.filter(e => e.line.problem).length;
-  const sum = lines.reduce((t, e) => t + e.line.sum, 0);
-  return { lines, bad, sum, count: lines.length };
+  const boxes = state.boxes.map(boxState);
+  const bad = lines.filter(e => e.line.problem).length + boxes.filter(b => b.problem).length;
+  const sum = lines.reduce((t, e) => t + e.line.sum, 0) + boxes.reduce((t, b) => t + b.total, 0);
+  return { lines, boxes, bad, sum, count: lines.length + boxes.length };
 }
 const budget = () => Number(state.details.budget) > 0 ? Number(state.details.budget) : 0;
-const wantsWaiters = () => /^да$/i.test(String(state.details.waiters || ''));
+function wantsWaiters() { return /^да$/i.test(String(state.details.waiters || '')); }
 
 /* ============================== Проверки ============================== */
 function validate(stage) {
@@ -648,6 +697,7 @@ function aiBoxHtml(partner) {
     <h3>Собрать меню с ИИ</h3>
     <p class="ai-brief">${briefSummary()}</p>
     <p>ИИ подберёт позиции из меню «${esc(partner.name)}» под ваше описание. Подборку можно поправить перед отправкой. Юрлицо и контакты ИИ не передаются.</p>
+    ${boxesAvailable(partner) ? `<label class="check"><input type="checkbox" data-ai-boxes ${a.useBoxes ? 'checked' : ''}> Разложить закуски по боксам (по ${partner.box.capacity} шт.)</label>` : ''}
     ${a.error ? `<div class="alert" role="alert">${esc(a.error)}</div>` : ''}
     ${a.comment ? `<div class="ai-result"><b>Подборка добавлена в смету</b>${esc(a.comment)}</div>` : ''}
     ${a.confirm ? `<div class="warn">В смете уже есть позиции — подборка ИИ заменит их.
@@ -680,6 +730,7 @@ function renderCatalog() {
     ${aiBoxHtml(partner)}
     <div class="layout">
       <section aria-label="Меню ${esc(partner.name)}">
+        <div id="boxes"></div>
         <div class="toolbar">
           <input class="search" id="search" type="search" placeholder="Поиск по меню ${esc(partner.name)}" value="${esc(state.search)}" autocomplete="off">
           <div class="chips" id="chips">${partner.categories.map((c, i) => `<button class="chip" type="button" data-jump="cat-${i}">${esc(c.title)}</button>`).join('')}</div>
@@ -690,9 +741,94 @@ function renderCatalog() {
     </div>`;
 
   renderSwitchWarning();
+  renderBoxes();
   renderItems();
   renderCart();
   $('search').addEventListener('input', e => { state.search = e.target.value; renderItems(); });
+}
+
+/* ---------- Боксы с закусками ---------- */
+function renderBoxes() {
+  const slot = $('boxes');
+  if (!slot) return;
+  const partner = currentPartner();
+  if (!partner.box || (!boxesAvailable() && !state.boxes.length)) { slot.innerHTML = ''; return; }
+  const cap = partner.box.capacity;
+  const open = state.boxes[state.openBox];
+
+  const cards = state.boxes.map((box, i) => {
+    const b = boxState(box);
+    return `<div class="box-card${i === state.openBox ? ' open' : ''}${b.problem ? ' bad' : ''}">
+      <button class="box-main" type="button" data-box-open="${i}">
+        <b>Бокс ${i + 1}</b>
+        <span>${b.filled} из ${cap} · ${fmt(b.unit)} ${cur()} за бокс</span>
+        ${b.problem ? `<span class="box-problem">${esc(b.problem)}</span>` : `<span class="box-list">${b.lines.map(l => `${esc(l.item.name)} ×${l.perBox}`).join(', ')}</span>`}
+      </button>
+      <div class="box-tools">
+        <div class="qty small-qty" title="Сколько таких боксов">
+          <button type="button" data-box-dec="${i}" aria-label="Меньше боксов">−</button>
+          <input inputmode="numeric" data-box-count="${i}" value="${esc(box.count)}" aria-label="Количество боксов ${i + 1}">
+          <button type="button" data-box-inc="${i}" aria-label="Больше боксов">+</button>
+        </div>
+        <span class="box-sum">${b.problem ? '—' : `${fmt(b.total)} ${cur()}`}</span>
+        <button class="link" type="button" data-box-copy="${i}">копия</button>
+        <button class="link" type="button" data-box-del="${i}">удалить</button>
+      </div>
+    </div>`;
+  }).join('');
+
+  slot.innerHTML = `<div class="boxes">
+    <div class="boxes-head">
+      <div><h3>Боксы с закусками</h3>
+        <p>${cap} закусок в боксе, наполнение на ваш выбор: канапе, брускетты, салаты, фингер-фуд, выпечка, десерты. Формат без официантов.</p></div>
+      ${boxesAvailable() ? `<button class="btn" type="button" data-box-add>+ Собрать бокс на ${cap} закусок</button>` : ''}
+    </div>
+    ${!boxesAvailable() ? '<div class="warn">Боксы — формат без официантов. На шаге 1 выбрано «официанты нужны»: уберите боксы или измените ответ.</div>' : ''}
+    ${cards ? `<div class="box-cards">${cards}</div>` : ''}
+    ${open ? boxEditorHtml(open, cap) : ''}
+  </div>`;
+}
+
+function boxEditorHtml(box, cap) {
+  const b = boxState(box);
+  const q = state.boxSearch.trim().toLowerCase();
+  const partner = currentPartner();
+  const groups = [];
+  partner.categories.forEach(c => c.sections.forEach(s => {
+    const items = s.items.filter(it => it.box && (!q || `${it.name} ${it.extra || ''}`.toLowerCase().includes(q)));
+    if (items.length) groups.push({ title: [c.title, s.title].filter(Boolean).join(' · '), items });
+  }));
+  const full = b.filled >= cap;
+  return `<div class="box-editor" id="box-editor">
+    <div class="box-editor-head">
+      <b>Бокс ${state.openBox + 1}: ${b.filled} из ${cap}</b>
+      <div class="box-progress" aria-hidden="true"><i style="width:${Math.min(100, b.filled / cap * 100)}%"></i></div>
+      <button class="btn small" type="button" data-box-close>${full ? 'Готово' : 'Свернуть'}</button>
+    </div>
+    <input class="search" type="search" data-box-search placeholder="Поиск закусок для бокса" value="${esc(state.boxSearch)}" autocomplete="off">
+    <div class="box-groups">${groups.map(g => `
+      <div class="section-title">${esc(g.title)}</div>
+      <ul class="items">${g.items.map(it => {
+        const n = Number(box.items[it.id]) || 0;
+        return `<li class="item${n ? ' picked' : ''}">
+          <div><div class="item-name">${esc(it.name)}</div>
+            <div class="item-meta"><span class="item-price">${fmt(it.price)} ${cur()}</span>${it.extra ? `<span>${esc(it.extra)}</span>` : ''}</div></div>
+          ${n ? `<div class="qty"><button type="button" data-bx-dec="${it.id}" aria-label="Меньше">−</button>
+              <input value="${n}" readonly aria-label="В боксе: ${esc(it.name)}">
+              <button type="button" data-bx-inc="${it.id}" aria-label="Больше" ${full ? 'disabled' : ''}>+</button></div>`
+            : `<button class="add" type="button" data-bx-inc="${it.id}" ${full ? 'disabled' : ''}>В бокс</button>`}
+        </li>`;
+      }).join('')}</ul>`).join('') || `<p class="empty-search">Ничего не нашлось.</p>`}</div>
+  </div>`;
+}
+
+function refreshBoxes() {
+  const scroller = document.querySelector('.box-groups');
+  const top = scroller ? scroller.scrollTop : 0;
+  renderBoxes();
+  const again = document.querySelector('.box-groups');
+  if (again) again.scrollTop = top;
+  renderCart(); updateMobileBar(); refreshSteps();
 }
 
 function renderSwitchWarning() {
@@ -791,6 +927,12 @@ function renderCart() {
         <span class="sm">${e.line.problem ? '—' : `${fmt(e.line.sum)}`}</span>
         <span class="calc">${e.line.problem ? esc(e.line.problem) : `${e.line.qty} × ${fmt(e.item.price)}`}</span>
         <button class="rm" type="button" data-remove="${e.item.id}">убрать</button>
+      </div>`).join('') + t.boxes.map((b, i) => `
+      <div class="cart-line${b.problem ? ' bad' : ''}">
+        <span class="nm">📦 Бокс ${i + 1} · ${boxCapacity()} закусок</span>
+        <span class="sm">${b.problem ? '—' : fmt(b.total)}</span>
+        <span class="calc">${b.problem ? esc(b.problem) : `${b.count} × ${fmt(b.unit)}`}</span>
+        <button class="rm" type="button" data-box-del="${i}">убрать</button>
       </div>`).join('') : '<p class="cart-empty">Добавьте позиции из меню или соберите меню с ИИ — здесь появится смета с суммой по каждой строке.</p>'}</div>
     <div class="cart-foot">
       <div class="total"><span>Итого</span><b>${fmt(t.sum)} ${cur()}</b></div>
@@ -852,6 +994,16 @@ function approachesText() {
   return state.approaches.map((a, i) =>
     `${i + 1}) ${a.time && state.approaches.length > 1 ? `${a.time} — ` : ''}${a.tags.join(', ') || 'по усмотрению кейтеринга'}${a.note ? `; ${a.note}` : ''}`);
 }
+function boxRows(boxes) {
+  if (!boxes.length) return '';
+  const rows = ['<tr class="cat"><td colspan="5">Боксы с закусками</td></tr>'];
+  boxes.forEach((b, i) => {
+    rows.push(`<tr class="sec"><td colspan="5">Бокс ${i + 1} · ${boxCapacity()} закусок · ${b.count} шт. × ${fmt(b.unit)} ${cur()}</td></tr>`);
+    b.lines.forEach(l => rows.push(`<tr><td class="n">${esc(l.item.number)}</td><td>${esc(l.item.name)} <span class="muted">— ${l.perBox} в боксе</span></td>
+      <td class="num">${fmt(l.item.price)}</td><td class="num">${l.perBox * b.count}</td><td class="num"><b>${fmt(l.perBox * b.count * l.item.price)}</b></td></tr>`));
+  });
+  return rows.join('');
+}
 function estimateRows(lines) {
   let cat = null, sec = null;
   const rows = [];
@@ -884,8 +1036,8 @@ function renderReview() {
       <div class="table-box">
         <table>
           <thead><tr><th>№</th><th>Наименование</th><th class="num">Цена, ${cur()}</th><th class="num">Кол-во</th><th class="num">Сумма, ${cur()}</th></tr></thead>
-          <tbody>${estimateRows(t.lines)}
-            <tr class="sum"><td></td><td>Итого · ${positions(t.count)}</td><td></td><td class="num">${t.lines.reduce((n, e) => n + e.line.qty, 0)}</td><td class="num">${fmt(t.sum)}</td></tr>
+          <tbody>${estimateRows(t.lines)}${boxRows(t.boxes)}
+            <tr class="sum"><td></td><td>Итого · ${positions(t.count)}</td><td></td><td class="num">${t.lines.reduce((n, e) => n + e.line.qty, 0) + t.boxes.reduce((n, b) => n + b.filled * b.count, 0)}</td><td class="num">${fmt(t.sum)}</td></tr>
           </tbody>
         </table>
       </div>
@@ -947,7 +1099,7 @@ function post(body) {
 }
 
 function briefPayload() {
-  const brief = { approaches: state.approaches.map(a => ({ tags: a.tags, note: a.note })) };
+  const brief = { approaches: state.approaches.map(a => ({ tags: a.tags, note: a.note })), useBoxes: boxesAvailable() && state.ai.useBoxes };
   fields('brief').forEach(f => { brief[f.key] = String(state.details[f.key] || '').trim(); });
   return brief;
 }
@@ -955,20 +1107,26 @@ function briefPayload() {
 async function runAi(force) {
   if (state.ai.loading) return;
   if (totals().count && !force) { state.ai.confirm = true; renderCatalog(); return; }
-  state.ai = { loading: true, comment: '', error: '', confirm: false };
+  state.ai = { loading: true, comment: '', error: '', confirm: false, useBoxes: state.ai.useBoxes };
   renderCatalog();
   try {
     const result = await post({ action: 'suggest', pin: state.pin, partner: currentPartner().name, brief: briefPayload() });
     if (!result.ok) {
-      state.ai = { loading: false, comment: '', error: (result.errors || [result.message || 'Неизвестная ошибка']).join(' '), confirm: false };
+      resetAi(); state.ai.error = (result.errors || [result.message || 'Неизвестная ошибка']).join(' ');
     } else {
       state.qty = {};
-      result.items.forEach(i => { state.qty[i.id] = i.quantity; });
-      state.ai = { loading: false, comment: result.comment || '', error: '', confirm: false };
+      (result.items || []).forEach(i => { state.qty[i.id] = i.quantity; });
+      state.boxes = (result.boxes || []).map(b => {
+        const items = {};
+        b.items.forEach(i => { items[String(i.id)] = i.quantity; });
+        return { count: b.count, items };
+      });
+      state.openBox = -1;
+      resetAi(); state.ai.comment = result.comment || '';
       save();
     }
   } catch (error) {
-    state.ai = { loading: false, comment: '', error: 'Нет связи с таблицей. Проверьте интернет и попробуйте ещё раз.', confirm: false };
+    resetAi(); state.ai.error = 'Нет связи с таблицей. Проверьте интернет и попробуйте ещё раз.';
   }
   render();
 }
@@ -996,6 +1154,7 @@ async function send() {
         pin: state.pin,
         partner: partner.name,
         items: t.lines.map(e => ({ id: e.item.id, name: e.item.name, quantity: e.line.qty })),
+        boxes: t.boxes.map(b => ({ count: b.count, items: b.lines.map(l => ({ id: l.item.id, name: l.item.name, quantity: l.perBox })) })),
         details,
       });
     }
@@ -1006,7 +1165,8 @@ async function send() {
       state.qty = {};
       state.details = {};
       state.approaches = [{ tags: [], note: '', time: '' }];
-      state.ai = { loading: false, comment: '', error: '', confirm: false };
+      state.boxes = []; state.openBox = -1;
+      resetAi();
       save();
     }
   } catch (error) {
@@ -1041,6 +1201,40 @@ document.addEventListener('click', e => {
   }
 
   if (d.aiRun !== undefined) { runAi(d.aiRun === 'force'); return; }
+
+  if (d.boxAdd !== undefined) {
+    state.boxes.push({ count: Math.max(1, Number(state.details.guests) || 1), items: {} });
+    state.openBox = state.boxes.length - 1; state.boxSearch = '';
+    save(); refreshBoxes();
+    const ed = $('box-editor'); if (ed) ed.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    return;
+  }
+  if (d.boxOpen !== undefined) { const i = Number(d.boxOpen); state.openBox = state.openBox === i ? -1 : i; state.boxSearch = ''; refreshBoxes(); return; }
+  if (d.boxClose !== undefined) { state.openBox = -1; refreshBoxes(); return; }
+  if (d.boxCopy !== undefined) {
+    const src = state.boxes[Number(d.boxCopy)];
+    state.boxes.push({ count: src.count, items: Object.assign({}, src.items) });
+    state.openBox = state.boxes.length - 1; save(); refreshBoxes(); return;
+  }
+  if (d.boxDel !== undefined) {
+    const i = Number(d.boxDel); state.boxes.splice(i, 1);
+    if (state.openBox === i) state.openBox = -1; else if (state.openBox > i) state.openBox -= 1;
+    save(); refreshBoxes(); return;
+  }
+  if (d.boxInc !== undefined || d.boxDec !== undefined) {
+    const i = Number(d.boxInc !== undefined ? d.boxInc : d.boxDec);
+    const box = state.boxes[i];
+    box.count = Math.max(1, (Number(box.count) || 0) + (d.boxInc !== undefined ? 1 : -1));
+    save(); refreshBoxes(); return;
+  }
+  if (d.bxInc || d.bxDec) {
+    const box = state.boxes[state.openBox]; if (!box) return;
+    const id = d.bxInc || d.bxDec;
+    const n = (Number(box.items[id]) || 0) + (d.bxInc ? 1 : -1);
+    if (d.bxInc && boxState(box).filled >= boxCapacity()) return;
+    if (n > 0) box.items[id] = n; else delete box.items[id];
+    save(); refreshBoxes(); return;
+  }
   if (d.aiCancel !== undefined) { state.ai.confirm = false; renderCatalog(); return; }
 
   if (d.add) { const it = findItem(d.add); setQty(d.add, it.min); return; }
@@ -1055,19 +1249,19 @@ document.addEventListener('click', e => {
     setQty(d.dec, prev >= it.min ? prev : ''); return;
   }
   if (d.remove) { setQty(d.remove, ''); return; }
-  if (d.clear !== undefined) { state.qty = {}; state.ai.comment = ''; save(); renderCatalog(); updateMobileBar(); return; }
+  if (d.clear !== undefined) { state.qty = {}; state.boxes = []; state.openBox = -1; state.ai.comment = ''; save(); renderCatalog(); updateMobileBar(); return; }
 
   if (d.jump) { const el = $(d.jump); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); return; }
 
   if (d.partner) {
     if (d.partner === state.partner) return;
     if (totals().count) { state.pendingPartner = d.partner; renderSwitchWarning(); return; }
-    state.partner = d.partner; state.search = ''; state.ai = { loading: false, comment: '', error: '', confirm: false };
+    state.partner = d.partner; state.search = ''; state.boxes = []; state.openBox = -1; resetAi();
     save(); renderCatalog(); updateMobileBar(); return;
   }
   if (d.confirmSwitch !== undefined) {
-    state.qty = {}; state.partner = state.pendingPartner; state.pendingPartner = ''; state.search = '';
-    state.ai = { loading: false, comment: '', error: '', confirm: false };
+    state.qty = {}; state.boxes = []; state.openBox = -1; state.partner = state.pendingPartner; state.pendingPartner = ''; state.search = '';
+    resetAi();
     save(); renderCatalog(); updateMobileBar(); return;
   }
   if (d.cancelSwitch !== undefined) { state.pendingPartner = ''; renderSwitchWarning(); return; }
@@ -1087,6 +1281,18 @@ document.addEventListener('input', e => {
     renderCart(); updateMobileBar();
     return;
   }
+  if (el.dataset.boxSearch !== undefined) {
+    state.boxSearch = el.value;
+    renderBoxes();
+    const input = document.querySelector('[data-box-search]');
+    if (input) { input.focus(); input.setSelectionRange(input.value.length, input.value.length); }
+    return;
+  }
+  if (el.dataset.boxCount !== undefined) {
+    const v = el.value.replace(/[^\d]/g, '');
+    state.boxes[Number(el.dataset.boxCount)].count = v === '' ? '' : Number(v);
+    save(); renderCart(); updateMobileBar(); refreshSteps(); return;
+  }
   if (el.dataset.field) { state.details[el.dataset.field] = el.value; save(); refreshSteps(); return; }
   if (el.dataset.approachNote !== undefined) { state.approaches[Number(el.dataset.approachNote)].note = el.value; save(); refreshSteps(); return; }
   if (el.dataset.approachTime !== undefined) { state.approaches[Number(el.dataset.approachTime)].time = el.value; save(); refreshSteps(); return; }
@@ -1094,6 +1300,8 @@ document.addEventListener('input', e => {
 });
 
 document.addEventListener('change', e => {
+  if (e.target.dataset.aiBoxes !== undefined) { state.ai.useBoxes = e.target.checked; return; }
+  if (e.target.dataset.boxCount !== undefined) { refreshBoxes(); return; }
   if (e.target.dataset.qty) {
     const id = e.target.dataset.qty;
     if (state.qty[id] === '' || state.qty[id] === 0) delete state.qty[id];
@@ -1131,6 +1339,11 @@ async function start() {
     if (!state.menu.partners.some(p => p.name === state.partner)) { state.partner = state.menu.partners[0].name; if (!DEMO) state.qty = {}; }
     const ids = new Set(allItems(currentPartner()).map(e => e.item.id));
     Object.keys(state.qty).forEach(id => { if (!ids.has(id)) delete state.qty[id]; });
+    const boxIds = new Set(allItems(currentPartner()).filter(e => e.item.box).map(e => e.item.id));
+    state.boxes = currentPartner().box ? state.boxes.filter(b => b && b.items).map(b => {
+      Object.keys(b.items).forEach(id => { if (!boxIds.has(id)) delete b.items[id]; });
+      return b;
+    }) : [];
     state.approaches = state.approaches.slice(0, state.menu.approachMax).map(a => ({
       tags: (a.tags || []).filter(t => state.menu.approachTags.indexOf(t) >= 0), note: a.note || '', time: a.time || '',
     }));
