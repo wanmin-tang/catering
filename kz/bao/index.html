@@ -112,6 +112,8 @@ h2.view-title { margin: 0 0 6px; font: 600 24px/1.2 var(--font-display); text-wr
 .partner span { font-size: 14px; color: var(--muted); }
 .partner[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); }
 .partner[aria-pressed="true"] span { color: var(--accent); }
+.partner .pnote { margin-top: 4px; font-size: 14px; font-weight: 600; color: var(--ink); }
+.partner[aria-pressed="true"] .pnote { color: var(--ink); }
 
 .switch-warning {
   display: flex; flex-wrap: wrap; align-items: center; gap: 12px;
@@ -498,7 +500,8 @@ function renderCatalog() {
     ${multi ? `<div class="partners" role="group" aria-label="Партнёр">${state.menu.partners.map(p => `
       <button class="partner" type="button" data-partner="${esc(p.name)}" aria-pressed="${p.name === partner.name}">
         <b>${esc(p.name)}</b><span>${p.minQuantity > 1 ? `заказ от ${p.minQuantity} шт. каждой позиции` : 'любое количество'}</span>
-      </button>`).join('')}</div>` : `<div class="partners"><div class="partner" aria-pressed="true"><b>${esc(partner.name)}</b><span>${partner.minQuantity > 1 ? `заказ от ${partner.minQuantity} шт. каждой позиции` : 'любое количество'}</span></div></div>`}
+        ${p.note ? `<span class="pnote">${esc(p.note)}</span>` : ''}
+      </button>`).join('')}</div>` : `<div class="partners"><div class="partner" aria-pressed="true"><b>${esc(partner.name)}</b><span>${partner.minQuantity > 1 ? `заказ от ${partner.minQuantity} шт. каждой позиции` : 'любое количество'}</span>${partner.note ? `<span class="pnote">${esc(partner.note)}</span>` : ''}</div></div>`}
     <div id="switch-slot"></div>
     <div class="layout">
       <section aria-label="Меню ${esc(partner.name)}">
