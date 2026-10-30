@@ -417,7 +417,7 @@ const DEMO_MENU = {
     { key: 'date', stage: 'final', label: 'Дата мероприятия', required: true, type: 'date' },
     { key: 'time', stage: 'final', label: 'Время начала', required: true, type: 'time' },
     { key: 'zone', stage: 'final', label: 'Зона, в которой выставляем кейтеринг', required: true, wide: true, placeholder: 'Например: холл 2 этажа, у окна' },
-    { key: 'contact', stage: 'final', label: 'Контактное лицо и телефон', required: true, wide: true, placeholder: 'Имя и телефон' },
+    { key: 'contact', stage: 'final', label: 'Контактное лицо', required: true, wide: true, placeholder: 'Имя' },
     { key: 'comment', stage: 'final', label: 'Комментарий для кейтеринга', required: false, type: 'textarea', wide: true, placeholder: 'Например: заезд с 10:00, лифт до 3 этажа' },
   ],
   partners: [{
@@ -1163,7 +1163,7 @@ function renderDone() {
     <h2 class="view-title">${r.demo ? 'Демо: заявка собрана' : 'Заявка отправлена'}</h2>
     <p class="view-lead" style="margin-bottom:0">${r.demo
       ? 'В демо-режиме ничего не отправляется. После подключения к таблице заявка уйдёт в Telegram-чат кейтеринга.'
-      : `Кейтеринг <b>${esc(r.partner)}</b> получил заявку в Telegram: ${positions(r.positions)} на ${fmt(r.total)} ${cur()}.`}</p>
+      : `Кейтеринг <b>${esc(r.partner)}</b> получил заявку в Telegram${r.chat ? ` (чат «${esc(r.chat)}»)` : ''}: ${positions(r.positions)} на ${fmt(r.total)} ${cur()}.`}</p>
     <div class="btn-row"><button class="btn" type="button" data-new>Новая заявка</button></div>
   </div>`;
   $('mobile-bar').hidden = true;
