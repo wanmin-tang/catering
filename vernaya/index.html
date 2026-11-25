@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Меню · Верная кулинария</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+/*
+VOICE: тёплое, домашнее, быстрое — меню кулинарии, которое открывают с телефона у витрины.
+IDEA: бумажное меню-листовка, превращённое в одну прокручиваемую карточку.
+PICTURE: шапка-штамп «Верная» в красно-жёлтом круге на кремовом поле, затем сам список.
+COLOUR and TYPE: крем #fbf3e4, красный #c8202a, жёлтый #f2c230, тёмный #1d1a17; Onest (как Gilroy), Lobster для имени.
+LAYOUT: шапка, липкая лента категорий с поиском, разделы с ценами в колонке справа, контакты в подвале.
+*/
+:root{color-scheme:light dark;
+--bg:light-dark(#fbf3e4,#1b1613);--card:light-dark(#fffaf1,#241d19);--ink:light-dark(#1d1a17,#f4ebdc);
+--mute:light-dark(#7a6e62,#b4a796);--red:light-dark(#c8202a,#ef5a52);--yel:#f2c230;--line:light-dark(#e8dcc6,#3a302a)}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 Onest,system-ui,sans-serif;overflow-x:clip}
+html{scroll-padding-top:122px;scroll-behavior:smooth}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+.wrap{max-width:760px;margin:0 auto;padding:0 max(4vw,16px)}
+
+header{background:var(--red);color:#fff;position:relative;overflow:hidden}
+header .wrap{display:flex;align-items:center;gap:20px;padding-block:28px 30px}
+.badge{flex:none;width:clamp(116px,30vw,150px);aspect-ratio:1;border-radius:50%;background:#faf4e6;overflow:hidden;
+ box-shadow:0 0 0 5px rgba(255,255,255,.9),0 12px 26px rgba(0,0,0,.28)}
+.badge img{display:block;width:100%;height:100%}
+header h1{margin:0;font:800 clamp(34px,8vw,48px)/1 Onest,sans-serif}
+header p{margin:6px 0 0;font-weight:500;opacity:.92}
+header::after{content:"";position:absolute;right:-60px;top:-60px;width:220px;height:220px;border-radius:50%;
+ border:18px solid rgba(242,194,48,.35)}
+
+.bar{position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:1px solid var(--line);box-shadow:0 6px 14px -12px rgba(0,0,0,.35)}
+.search{display:flex;gap:8px;padding-top:12px}
+.search input{flex:1;font:16px Onest,sans-serif;height:44px;border-radius:22px;border:1.5px solid var(--line);
+ background:var(--card);color:var(--ink);padding:0 18px}
+.search input:focus{outline:none;border-color:var(--red)}
+.search button{height:44px;padding:0 16px;border-radius:22px;border:0;background:var(--line);color:var(--ink);font:500 15px Onest;cursor:pointer}
+.chips{display:flex;gap:8px;overflow-x:auto;padding:10px 0 12px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chips a{flex:none;text-decoration:none;color:var(--ink);background:var(--card);border:1.5px solid var(--line);
+ padding:9px 14px;border-radius:20px;font-weight:500;font-size:14px;white-space:nowrap;min-height:40px}
+.chips a.on{background:var(--red);border-color:var(--red);color:#fff}
+.chips a:focus-visible,.search button:focus-visible{outline:3px solid var(--yel);outline-offset:2px}
+
+section{padding:26px 0 6px}
+h2{margin:0 0 10px;color:var(--red);font:800 22px/1.15 Onest,sans-serif;text-transform:uppercase;letter-spacing:.3px}
+h3{margin:18px 0 4px;font:700 16px Onest;color:var(--mute)}
+ul{list-style:none;margin:0;padding:0}
+li{display:flex;align-items:baseline;gap:8px;padding:9px 0}
+li .n{flex:0 1 auto}
+li .d{flex:1 1 20px;border-bottom:2px dotted var(--line);transform:translateY(-4px);min-width:20px}
+li .p{flex:none;font-weight:700;white-space:nowrap;font-variant-numeric:tabular-nums}
+li small{display:block;color:var(--mute);font-size:13px}
+.empty{display:none;padding:40px 0;text-align:center;color:var(--mute)}
+
+footer{margin-top:34px;background:var(--card);border-top:4px solid var(--yel);padding:26px 0 36px}
+footer .wrap{display:grid;gap:12px}
+footer a{color:var(--red);font-weight:700;text-decoration:none}
+footer .row{display:flex;flex-wrap:wrap;gap:6px 16px;align-items:center}
+.note{color:var(--mute);font-size:13px}
+</style>
+</head>
+<body>
+<header><div class="wrap">
+ <div class="badge"><img src="logo.png" alt="Верная — самая верная кулинария" width="400" height="400"></div>
+ <div><h1>Меню</h1><p>Верная кулинария<br>ул. Толе Би, 179Б</p></div>
+</div></header>
+
+<div class="bar"><div class="wrap">
+ <div class="search"><input id="q" type="search" placeholder="Найти блюдо…" aria-label="Поиск по меню"><button id="clr" type="button" hidden>Сброс</button></div>
+ <nav class="chips" id="chips" aria-label="Разделы меню"></nav>
+</div></div>
+
+<main class="wrap" id="menu"></main>
+<p class="wrap empty" id="empty">Ничего не нашлось — попробуйте другое слово.</p>
+
+<footer><div class="wrap">
+ <div class="row"><span>Instagram:</span><a href="https://instagram.com/vernaya_kulinarya">@vernaya_kulinarya</a></div>
+ <div class="row"><span>Телефон:</span><a href="tel:+77769386767">+7 776 938 6767</a></div>
+ <div class="row"><span>Адрес:</span><b>ул. Толе Би, 179Б</b></div>
+ <p class="note">Цены указаны в тенге.</p>
+</div></footer>
+
+<script>
+{
+const M=[
+["Проснулись — поели","breakfast",[["Яичница-глазунья с сосиской",1400],["Омлет с сыром и свежими овощами",1400],["Завтрак с сёмгой, авокадо, перепелиным яйцом и творожным сыром",3000],["Творожок с вареньем",1300]]],
+["Всё смешалось","salads",[["Салат «Греческий»",1600],["Салат со свёклой, рукколой и творожным сыром",1700],["Винегрет",1200],["Салат с тунцом",2200],["Салат со шпинатом, сёмгой и томатами черри",2200],["Салат с угрём",2200],["Салат «Крабовый»",1600],["Салат с грибами, айсбергом и курицей",1700],["Салат «Цезарь»",1700],["Салат «Оливье» с колбасой",1600]]],
+["Ложку наготове","soups",[["Борщ",1600],["Солянка",1900],["Мясо по-казахски",1900],["Суп-лапша с курочкой",1400],["Кукси (сезонное блюдо)",1600]]],
+["Теперь серьёзно","mains",[["Стейк из сёмги",3500],["Бефстроганов",2800],["Бифштекс с яйцом",1800],["Гуляш",2800],["Плов с говядиной",2500],["Мясо по-тайски",2400],["Курица по-восточному",1700],["Курица в кисло-сладком соусе",1700],["Курица с грибами и шпинатом в сливочном соусе",1900],["Жареный лагман",2500],["Манты с говядиной и тыквой",2500],["Пельмени с говядиной и бульоном",2000],["Вареники с картофелем",1600]]],
+["За компанию","sides",[["Картофельное пюре",700],["Овощи-гриль",1000],["Рис отварной",600],["Рис с овощами",700],["Гречка отварная",600],["Макароны отварные",500]]],
+["Хватай и кусай","snacks",[["Корейский сэндвич с ветчиной и скрэмблом",2800],["Сэндвич с курицей",1700],["Сэндвич с сыровяленой телятиной",1800],["Хот-дог с грибным соусом и куриной колбаской",1600],["Хот-дог с соусом тартар и говяжьей колбаской",1600],["Кармашки с курицей",1700],["Панини с курицей и соусом терияки",1500],["Панини с говяжьей ветчиной и сыром",1500]]],
+["Залипни на сладкое","desserts",[["Кейк-бокс «Киндер Буэно»",2600],["Кейк-бокс «Киндер Кантри»",2600],["Кейк-бокс «Баноффи пай»",2600],["Чизкейк «Сан-Себастьян» фисташковый с малиной",1700],["Чизкейк «Сан-Себастьян» шоколадный с голубикой",1700],["Корпусный десерт «Еловая шишка»",2300],["Корпусный десерт «Малина»",2300],["Пирожное «Картошка»",700],["Заварное кольцо",1000],["Эклер шоколадный",900],["Пирожное медовое",1000],["Пирожное «Наполеон»",1100],["Пирожное «Молочная девочка»",1000],["Пирожное шоколадно-фундучное",1100],["Фисташковый рулет с малиной",1400],["Кукисы классические с шоколадной крошкой",1000],["Кукисы с фисташкой и вишней",1000],["Кукисы «Капучино»",1000],["Трубочки с ганашем на молочном шоколаде и фундуком",1000],["Трубочки с варёной сгущёнкой",1000]]],
+["Булки в деле","bakery",[["Круассан классический",900],["Круассан с шоколадом",1200],["Круассан со сгущёнкой",1100],["Косичка с творогом",900],["Косичка с вишней",900],["Блинчики",250],["Блинчики с мясом",500],["Блинчики с курицей и грибами",500],["Блинчики с творогом",500],["Сырники",400],["Пирожки печёные с луком и яйцом",300],["Пирожки печёные с картофелем",300],["Пирожки печёные с капустой",300],["Самса песочная с говядиной",550],["Самса песочная с говядиной и тыквой",550],["Самса песочная с курицей",550],["Расстегай с сёмгой",600],["Сосиски в тесте",500],["Лепёшки",300]]],
+["Глоток — и погнали","drinks",[
+ ["#Проснулись!"],["Espresso",1200],["Double Espresso",2200],["Americano, 200 мл",1200],["Cappuccino, 200 мл",1200],["Latte, 200 мл",1200],["Flat White, 200 мл",1200],["Raf coffee, 200 мл",1500],["Irish coffee, 200 мл",1200],["Ice Coffee, 200 мл",1200],["Bumble Coffee, 200 мл",1200],["Кофе на альтернативном молоке, 200 мл",1500],
+ ["#Согрелись!"],["Чай чёрный пакетированный",400],["Чай зелёный пакетированный",400],
+ ["#Освежились!"],["Компот из свежих ягод, 500 мл",800],["Цитрусовый лимонад, 500 мл",800],["Брусничный морс, 500 мл",800],["Вода негазированная, 500 мл",500],["Вода газированная, 500 мл",500],["Borjomi, стекло, 500 мл",1200],["Coca-Cola, стекло, 250 мл",800],["Coca-Cola, 500 мл",800],["Sprite, 500 мл",800],["Fanta, 500 мл",800],["Холодный чай Fuse Tea",700],["Gorilla, 500 мл",900],["Red Bull, 250 мл",1200],["Schweppes, 450 мл",900]]]
+];
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const fmt=n=>n.toLocaleString("ru-RU")+" ₸";
+const menu=document.getElementById("menu"),chips=document.getElementById("chips"),q=document.getElementById("q"),clr=document.getElementById("clr"),empty=document.getElementById("empty");
+
+chips.innerHTML=M.map(([t,id])=>`<a href="#${id}" data-id="${id}">${esc(t)}</a>`).join("");
+const render=f=>{
+ const k=f.trim().toLowerCase();let total=0;
+ menu.innerHTML=M.map(([t,id,items])=>{
+  let html="",sub="",count=0;
+  for(const it of items){
+   if(it.length===1){sub=it[0].slice(1);if(!k)html+=`<h3>${esc(sub)}</h3>`;continue}
+   if(k&&!it[0].toLowerCase().includes(k))continue;
+   count++;
+   html+=`<li><span class="n">${esc(it[0])}${k&&sub?`<small>${esc(sub)}</small>`:""}</span><span class="d"></span><span class="p">${fmt(it[1])}</span></li>`;
+  }
+  total+=count;
+  if(!count)return"";
+  return `<section id="${id}"><h2>${esc(t)}</h2><ul>${html.replace(/<h3>/g,"</ul><h3>").replace(/<\/h3>/g,"</h3><ul>")}</ul></section>`;
+ }).join("");
+ empty.style.display=total?"none":"block";
+ clr.hidden=!k;
+ for(const a of chips.children)a.style.display=!k||menu.querySelector("#"+a.dataset.id)?"":"none";
+ spy();
+};
+const spy=()=>{
+ const secs=[...menu.querySelectorAll("section")];let cur=secs[0]?.id;
+ for(const s of secs)if(s.getBoundingClientRect().top<140)cur=s.id;
+ for(const a of chips.children){const on=a.dataset.id===cur;if(on!==a.classList.contains("on")){a.classList.toggle("on",on);if(on)chips.scrollTo({left:a.offsetLeft-16,behavior:"smooth"})}}
+};
+q.addEventListener("input",()=>render(q.value));
+clr.addEventListener("click",()=>{q.value="";render("");q.focus()});
+addEventListener("scroll",spy,{passive:true});
+render("");
+}
+</script>
+</body>
+</html>
