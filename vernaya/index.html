@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#c8202a">
 <title>Меню · Верная кулинария</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;700;800&display=swap" rel="stylesheet">
@@ -10,87 +11,146 @@
 /*
 VOICE: тёплое, домашнее, быстрое — меню кулинарии, которое открывают с телефона у витрины.
 IDEA: бумажное меню-листовка, превращённое в одну прокручиваемую карточку.
-PICTURE: шапка-штамп «Верная» в красно-жёлтом круге на кремовом поле, затем сам список.
-COLOUR and TYPE: крем #fbf3e4, красный #c8202a, жёлтый #f2c230, тёмный #1d1a17; Onest (как Gilroy), Lobster для имени.
-LAYOUT: шапка, липкая лента категорий с поиском, разделы с ценами в колонке справа, контакты в подвале.
+PICTURE: красная шапка с логотипом и крупным именем «Верная кулинария», затем сам список.
+COLOUR and TYPE: крем #fbf3e4, красный #c8202a, жёлтый #f2c230, тёмный #1d1a17; Onest (близок к Gilroy).
+LAYOUT: шапка; липкая панель (поиск + разделы: на компьютере все кнопки видны, на телефоне — кнопка «Разделы» с листом); разделы; подвал.
 */
 :root{color-scheme:light dark;
 --bg:light-dark(#fbf3e4,#1b1613);--card:light-dark(#fffaf1,#241d19);--ink:light-dark(#1d1a17,#f4ebdc);
 --mute:light-dark(#7a6e62,#b4a796);--red:light-dark(#c8202a,#ef5a52);--yel:#f2c230;--line:light-dark(#e8dcc6,#3a302a)}
 :root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
 *{box-sizing:border-box;min-width:0}
-body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 Onest,system-ui,sans-serif;overflow-x:clip}
-html{scroll-padding-top:122px;scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 Onest,system-ui,sans-serif;overflow-x:clip;-webkit-text-size-adjust:100%}
+html{scroll-behavior:smooth}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
 .wrap{max-width:1240px;margin:0 auto;padding:0 max(4vw,16px)}
+button{font-family:inherit}
 
-header{background:var(--red);color:#fff;position:relative;overflow:hidden}
-header .wrap{display:flex;align-items:center;gap:20px;padding-block:28px 30px;position:relative;z-index:1}
-.lang{position:absolute;top:14px;right:max(4vw,16px);display:flex;background:rgba(0,0,0,.18);border-radius:22px;padding:3px}
-.lang button{min-width:52px;height:38px;border:0;border-radius:19px;background:none;color:#fff;font:700 15px Onest,sans-serif;cursor:pointer}
-.lang button[aria-pressed=true]{background:#fff;color:#c8202a}
-.lang button:focus-visible{outline:3px solid var(--yel);outline-offset:1px}
-@media(max-width:600px){header .wrap{padding-top:58px}}
-.badge{flex:none;width:clamp(116px,30vw,150px);aspect-ratio:1;border-radius:50%;background:#faf4e6;overflow:hidden;
- box-shadow:0 0 0 5px rgba(255,255,255,.9),0 12px 26px rgba(0,0,0,.28)}
+/* header */
+header{background:#c8202a;color:#fff;position:relative;overflow:hidden}
+header::after{content:"";position:absolute;right:-70px;top:-70px;width:240px;height:240px;border-radius:50%;border:18px solid rgba(242,194,48,.35);pointer-events:none}
+.hd{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:28px;padding-block:32px 34px;position:relative;z-index:1}
+.badge{width:150px;aspect-ratio:1;border-radius:50%;background:#faf4e6;overflow:hidden;box-shadow:0 0 0 5px rgba(255,255,255,.9),0 12px 26px rgba(0,0,0,.28)}
 .badge img{display:block;width:100%;height:100%}
-header h1{margin:0;font:800 clamp(34px,8vw,48px)/1 Onest,sans-serif}
-header p{margin:6px 0 0;font-weight:500;opacity:.92}
-.dl{display:inline-flex;align-items:center;gap:8px;margin-top:14px;min-height:44px;padding:0 18px;border-radius:22px;background:#fff;color:#c8202a;font-weight:700;text-decoration:none;box-shadow:0 6px 16px rgba(0,0,0,.18)}
-.dl:hover{background:var(--yel);color:#1d1a17}.dl:focus-visible{outline:3px solid var(--yel);outline-offset:2px}
+h1{margin:0;font:800 clamp(34px,5.6vw,66px)/1 Onest,sans-serif;text-wrap:balance;letter-spacing:-.5px}
+.sub{margin:10px 0 0;font:700 clamp(16px,2vw,22px)/1.2 Onest,system-ui,sans-serif;text-transform:uppercase;letter-spacing:2px;color:var(--yel)}
+.dl{display:inline-flex;align-items:center;gap:8px;margin-top:16px;min-height:44px;padding:0 18px;border-radius:22px;background:#fff;color:#c8202a;font-weight:700;text-decoration:none;box-shadow:0 6px 16px rgba(0,0,0,.18)}
+.dl:hover{background:var(--yel);color:#1d1a17}
 .dl svg{width:18px;height:18px;flex:none}
-header::after{content:"";position:absolute;right:-60px;top:-60px;width:220px;height:220px;border-radius:50%;
- border:18px solid rgba(242,194,48,.35)}
+.lang{align-self:start;display:flex;background:rgba(0,0,0,.2);border-radius:22px;padding:3px}
+.lang button{min-width:54px;height:40px;border:0;border-radius:20px;background:none;color:#fff;font-weight:700;font-size:15px;cursor:pointer}
+.lang button[aria-pressed=true]{background:#fff;color:#c8202a}
 
-.bar{position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:1px solid var(--line);box-shadow:0 6px 14px -12px rgba(0,0,0,.35)}
-.search{display:flex;gap:8px;padding-top:12px;max-width:640px}
-.search input{flex:1;font:16px Onest,sans-serif;height:44px;border-radius:22px;border:1.5px solid var(--line);
- background:var(--card);color:var(--ink);padding:0 18px}
+/* sticky bar */
+.bar{position:sticky;top:0;z-index:10;background:var(--bg);border-bottom:1px solid var(--line);box-shadow:0 6px 14px -12px rgba(0,0,0,.35)}
+.bar .wrap{padding-block:12px}
+.tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.search{position:relative;flex:0 0 280px}
+.search svg{position:absolute;left:15px;top:50%;width:18px;height:18px;transform:translateY(-50%);color:var(--mute);pointer-events:none}
+.search input{width:100%;font:16px Onest,sans-serif;height:46px;border-radius:23px;border:1.5px solid var(--line);background:var(--card);color:var(--ink);padding:0 44px 0 42px;-webkit-appearance:none;appearance:none}
+.search input::-webkit-search-cancel-button{display:none}
 .search input:focus{outline:none;border-color:var(--red)}
-.search button{height:44px;padding:0 16px;border-radius:22px;border:0;background:var(--line);color:var(--ink);font:500 15px Onest;cursor:pointer}
-.chips{display:flex;gap:8px;overflow-x:auto;padding:10px 0 12px;scrollbar-width:none}
-.chips::-webkit-scrollbar{display:none}
-.chips a{flex:none;text-decoration:none;color:var(--ink);background:var(--card);border:1.5px solid var(--line);
- padding:9px 14px;border-radius:20px;font-weight:500;font-size:14px;white-space:nowrap;min-height:40px}
+.x{position:absolute;right:5px;top:5px;width:36px;height:36px;border-radius:50%;border:0;background:var(--line);color:var(--ink);font-size:20px;line-height:1;cursor:pointer}
+.secbtn{display:none;flex:none;height:46px;padding:0 16px;border-radius:23px;border:0;background:var(--red);color:#fff;font-weight:700;font-size:15px;cursor:pointer;align-items:center;gap:8px}
+.secbtn svg{width:18px;height:18px}
+.chips{display:contents}
+.chips a{height:46px;text-decoration:none;color:var(--ink);background:var(--card);border:1.5px solid var(--line);padding:0 15px;border-radius:23px;font-weight:500;font-size:14.5px;white-space:nowrap;display:inline-flex;align-items:center}
+.chips a:hover{border-color:var(--red)}
 .chips a.on{background:var(--red);border-color:var(--red);color:#fff}
-.chips a:focus-visible,.search button:focus-visible{outline:3px solid var(--yel);outline-offset:2px}
+a:focus-visible,button:focus-visible{outline:3px solid var(--yel);outline-offset:2px}
 
-section{padding:26px 0 6px}
-h2{margin:0 0 10px;color:var(--red);font:800 22px/1.15 Onest,sans-serif;text-transform:uppercase;letter-spacing:.3px}
-h3{margin:18px 0 4px;font:700 16px Onest;color:var(--mute)}
+/* menu */
+section{padding:28px 0 6px}
+h2{margin:0 0 8px;color:var(--red);font:800 22px/1.15 Onest,sans-serif;text-transform:uppercase;letter-spacing:.3px}
+h3{margin:16px 0 2px;font:700 15px Onest,system-ui,sans-serif;color:var(--mute)}
 ul{list-style:none;margin:0;padding:0}
 main ul{columns:2 400px;column-gap:64px}
-main li{break-inside:avoid}
-li{display:flex;align-items:baseline;gap:8px;padding:9px 0}
+main li{break-inside:avoid;display:flex;align-items:baseline;gap:8px;padding:9px 0}
 li .n{flex:0 1 auto}
-li .d{flex:1 1 20px;border-bottom:2px dotted var(--line);transform:translateY(-4px);min-width:20px}
+li .d{flex:1 1 16px;border-bottom:2px dotted var(--line);transform:translateY(-4px);min-width:16px}
 li .p{flex:none;font-weight:700;white-space:nowrap;font-variant-numeric:tabular-nums}
 li small{display:block;color:var(--mute);font-size:13px}
 .empty{display:none;padding:40px 0;text-align:center;color:var(--mute)}
 
-footer{margin-top:34px;background:var(--card);border-top:4px solid var(--yel);padding:26px 0 36px}
+/* sheet (phone) */
+.sheet{position:fixed;inset:0;z-index:20;display:none}
+.sheet.open{display:block}
+.sheet .bg{position:absolute;inset:0;background:rgba(20,12,8,.5)}
+.panel{position:absolute;left:0;right:0;bottom:0;max-height:85vh;overflow:auto;background:var(--bg);border-radius:22px 22px 0 0;padding:10px 16px calc(18px + env(safe-area-inset-bottom));box-shadow:0 -10px 30px rgba(0,0,0,.25);animation:up .22s ease-out}
+@keyframes up{from{transform:translateY(40px);opacity:.4}}
+@media(prefers-reduced-motion:reduce){.panel{animation:none}}
+.grab{width:44px;height:5px;border-radius:3px;background:var(--line);margin:0 auto 10px}
+.ph{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.ph b{font-size:19px}
+.ph button{height:40px;padding:0 14px;border-radius:20px;border:0;background:var(--line);color:var(--ink);font-weight:500;font-size:15px;cursor:pointer}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.grid a{display:flex;flex-direction:column;justify-content:center;min-height:62px;padding:10px 14px;border-radius:14px;background:var(--card);border:1.5px solid var(--line);color:var(--ink);text-decoration:none;font-weight:700;font-size:15px;line-height:1.2}
+.grid a span{font-weight:400;font-size:13px;color:var(--mute);margin-top:3px}
+.grid a.on{border-color:var(--red);box-shadow:inset 0 0 0 1px var(--red)}
+
+footer{margin-top:34px;background:var(--card);border-top:4px solid var(--yel);padding:26px 0 calc(36px + env(safe-area-inset-bottom))}
 footer .wrap{display:grid;gap:12px}
 footer a{color:var(--red);font-weight:700;text-decoration:none}
 footer .row{display:flex;flex-wrap:wrap;gap:6px 16px;align-items:baseline}
-footer ul{display:grid;gap:4px}footer li{display:block;padding:0;font-weight:700}
-.note{color:var(--mute);font-size:13px}
+footer ul{display:grid;gap:4px}footer li{font-weight:700}
+.note{color:var(--mute);font-size:13px;margin:0}
+
+@media(max-width:820px){
+ .chips{display:none}
+ .secbtn{display:inline-flex}
+ .search{flex:1 1 auto}
+ .tools{flex-wrap:nowrap}
+}
+@media(max-width:600px){
+ .hd{grid-template-columns:auto minmax(0,1fr);grid-template-areas:"logo lang" "txt txt";gap:16px 12px;padding-block:18px 24px}
+ .badge{grid-area:logo;width:92px}
+ .lang{grid-area:lang;justify-self:end}
+ .txt{grid-area:txt}
+ h1{font-size:clamp(34px,10.5vw,44px)}
+ .sub{margin-top:8px}
+ .dl{margin-top:14px}
+ header::after{width:180px;height:180px;right:-60px;top:auto;bottom:-80px}
+ section{padding-top:22px}
+ h2{font-size:19px}
+ main li{padding:8px 0;font-size:15.5px}
+ .secbtn{padding:0 14px}
+}
 </style>
 </head>
 <body>
-<header><div class="wrap">
- <div class="lang" role="group" aria-label="Язык / Тіл"><button type="button" data-l="ru">Рус</button><button type="button" data-l="kz">Қаз</button></div>
+<header><div class="wrap hd">
  <div class="badge"><img src="logo.png" alt="Верная — самая верная кулинария" width="400" height="400"></div>
- <div><h1 data-t="title"></h1><p>Верная кулинария</p>
-  <a class="dl" href="vernaya-menu.pdf" download="Верная-меню.pdf"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11m-5-5 5 5 5-5M5 20h14"/></svg><span data-t="dl"></span></a></div>
+ <div class="txt">
+  <h1>Верная кулинария</h1>
+  <p class="sub" data-t="title"></p>
+  <a class="dl" href="vernaya-menu.pdf" download="Верная-меню.pdf"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11m-5-5 5 5 5-5M5 20h14"/></svg><span data-t="dl"></span></a>
+ </div>
+ <div class="lang" role="group" aria-label="Язык / Тіл"><button type="button" data-l="ru">Рус</button><button type="button" data-l="kz">Қаз</button></div>
 </div></header>
 
-<div class="bar"><div class="wrap">
- <div class="search"><input id="q" type="search"><button id="clr" type="button" data-t="clear" hidden></button></div>
- <nav class="chips" id="chips"></nav>
+<div class="bar" id="bar"><div class="wrap">
+ <div class="tools">
+  <div class="search">
+   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
+   <input id="q" type="search" enterkeyhint="search" autocomplete="off">
+   <button class="x" id="clr" type="button" hidden>×</button>
+  </div>
+  <button class="secbtn" id="secbtn" type="button" aria-haspopup="dialog" aria-controls="sheet"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h10"/></svg><span data-t="sec"></span></button>
+  <nav class="chips" id="chips"></nav>
+ </div>
 </div></div>
 
 <main class="wrap" id="menu"></main>
 <p class="wrap empty" id="empty" data-t="empty"></p>
+
+<div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="shT">
+ <div class="bg" id="shBg"></div>
+ <div class="panel">
+  <div class="grab"></div>
+  <div class="ph"><b id="shT" data-t="sec"></b><button type="button" id="shX" data-t="close"></button></div>
+  <nav class="grid" id="grid"></nav>
+ </div>
+</div>
 
 <footer><div class="wrap">
  <div class="row"><span data-t="addr"></span><ul id="addr"></ul></div>
@@ -102,9 +162,9 @@ footer ul{display:grid;gap:4px}footer li{display:block;padding:0;font-weight:700
 <script>
 {
 const T={
- ru:{title:"Меню",clear:"Сброс",ph:"Найти блюдо…",empty:"Ничего не нашлось — попробуйте другое слово.",addr:"Адреса:",phone:"Телефон:",note:"Цены указаны в тенге.",nav:"Разделы меню",dl:"Скачать меню (PDF)",
+ ru:{title:"Меню",clear:"Сброс",ph:"Найти блюдо…",empty:"Ничего не нашлось — попробуйте другое слово.",addr:"Адреса:",phone:"Телефон:",note:"Цены указаны в тенге.",nav:"Разделы меню",dl:"Скачать меню (PDF)",sec:"Разделы",close:"Закрыть",
   a:["пр. Аль-Фараби, 11/1, 1 этаж","ул. Толе Би, 179Б"]},
- kz:{title:"Мәзір",clear:"Тазалау",ph:"Тағамды іздеу…",empty:"Ештеңе табылмады — басқа сөзбен іздеп көріңіз.",addr:"Мекенжайлар:",phone:"Телефон:",note:"Бағалар теңгемен көрсетілген.",nav:"Мәзір бөлімдері",dl:"Мәзірді жүктеу (PDF)",
+ kz:{title:"Мәзір",clear:"Тазалау",ph:"Тағамды іздеу…",empty:"Ештеңе табылмады — басқа сөзбен іздеп көріңіз.",addr:"Мекенжайлар:",phone:"Телефон:",note:"Бағалар теңгемен көрсетілген.",nav:"Мәзір бөлімдері",dl:"Мәзірді жүктеу (PDF)",sec:"Бөлімдер",close:"Жабу",
   a:["Әл-Фараби даңғылы, 11/1, 1-қабат","Төле би көшесі, 179Б"]}
 };
 const M=[
@@ -198,13 +258,17 @@ const M=[
  ["Sprite, 500 мл","Sprite, 500 мл",800],["Fanta, 500 мл","Fanta, 500 мл",800],["Холодный чай Fuse Tea","Fuse Tea салқын шайы",700],
  ["Gorilla, 500 мл","Gorilla, 500 мл",900],["Red Bull, 250 мл","Red Bull, 250 мл",1200],["Schweppes, 450 мл","Schweppes, 450 мл",900]]]
 ];
+
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const $=id=>document.getElementById(id);
-const menu=$("menu"),chips=$("chips"),q=$("q"),clr=$("clr"),empty=$("empty");
+const menu=$("menu"),chips=$("chips"),grid=$("grid"),q=$("q"),clr=$("clr"),empty=$("empty"),bar=$("bar"),sheet=$("sheet");
 let L="ru";
 try{L=localStorage.getItem("vernaya-lang")||((navigator.language||"").startsWith("kk")?"kz":"ru")}catch(e){}
 const I=()=>L==="kz"?1:0;
+const cnt=items=>items.filter(it=>it[0]!=="#").length;
+const word=n=>L==="kz"?n+" позиция":n+" "+(n%10===1&&n%100!==11?"позиция":n%10>=2&&n%10<=4&&(n%100<10||n%100>=20)?"позиции":"позиций");
 
+const pad=()=>{document.documentElement.style.scrollPaddingTop=(bar.offsetHeight+10)+"px"};
 const render=()=>{
  const k=q.value.trim().toLowerCase();let total=0;
  menu.innerHTML=M.map(([t,id,items])=>{
@@ -220,30 +284,44 @@ const render=()=>{
  }).join("");
  empty.style.display=total?"none":"block";
  clr.hidden=!k;
- for(const a of chips.children)a.style.display=!k||menu.querySelector("#"+a.dataset.id)?"":"none";
+ for(const a of [...chips.children,...grid.children])a.style.display=!k||menu.querySelector("#"+a.dataset.id)?"":"none";
  spy();
 };
 const setLang=l=>{
  L=l;try{localStorage.setItem("vernaya-lang",l)}catch(e){}
  const t=T[l];
  document.documentElement.lang=l==="kz"?"kk":"ru";
- document.title=(l==="kz"?"Мәзір":"Меню")+" · Верная кулинария";
+ document.title=t.title+" · Верная кулинария";
  for(const el of document.querySelectorAll("[data-t]"))el.textContent=t[el.dataset.t];
  q.placeholder=t.ph;q.setAttribute("aria-label",t.ph);chips.setAttribute("aria-label",t.nav);
+ $("secbtn").setAttribute("aria-label",t.sec);clr.setAttribute("aria-label",t.clear);
  $("addr").innerHTML=t.a.map(x=>`<li>${esc(x)}</li>`).join("");
  for(const b of document.querySelectorAll(".lang button"))b.setAttribute("aria-pressed",b.dataset.l===l);
  chips.innerHTML=M.map(([n,id])=>`<a href="#${id}" data-id="${id}">${esc(n[I()])}</a>`).join("");
- render();
+ grid.innerHTML=M.map(([n,id,items])=>`<a href="#${id}" data-id="${id}">${esc(n[I()])}<span>${word(cnt(items))}</span></a>`).join("");
+ render();pad();
 };
+let cur="";
 const spy=()=>{
- const secs=[...menu.querySelectorAll("section")];let cur=secs[0]?.id;
- for(const s of secs)if(s.getBoundingClientRect().top<140)cur=s.id;
- for(const a of chips.children){const on=a.dataset.id===cur;if(on!==a.classList.contains("on")){a.classList.toggle("on",on);if(on)chips.scrollTo({left:a.offsetLeft-16,behavior:"smooth"})}}
+ const secs=[...menu.querySelectorAll("section")];let c=secs[0]?.id||"";
+ const lim=bar.offsetHeight+30;
+ for(const s of secs)if(s.getBoundingClientRect().top<lim)c=s.id;
+ if(c===cur)return;cur=c;
+ for(const a of [...chips.children,...grid.children])a.classList.toggle("on",a.dataset.id===c);
 };
+const open=()=>{sheet.classList.add("open");document.body.style.overflow="hidden";grid.querySelector(".on,a")?.focus()};
+const close=()=>{sheet.classList.remove("open");document.body.style.overflow="";$("secbtn").focus({preventScroll:true})};
+$("secbtn").addEventListener("click",open);
+$("shBg").addEventListener("click",close);$("shX").addEventListener("click",close);
+grid.addEventListener("click",e=>{const a=e.target.closest("a");if(!a)return;e.preventDefault();close();
+ const s=$(a.dataset.id);if(s)s.scrollIntoView()});
+addEventListener("keydown",e=>{if(e.key==="Escape"&&sheet.classList.contains("open"))close()});
 for(const b of document.querySelectorAll(".lang button"))b.addEventListener("click",()=>setLang(b.dataset.l));
-q.addEventListener("input",render);
+q.addEventListener("input",()=>{render();if(q.value)scrollTo({top:Math.min(scrollY,menu.offsetTop-bar.offsetHeight-10)})});
+q.addEventListener("keydown",e=>{if(e.key==="Enter")q.blur()});
 clr.addEventListener("click",()=>{q.value="";render();q.focus()});
 addEventListener("scroll",spy,{passive:true});
+const ro=new ResizeObserver(pad);ro.observe(bar);
 setLang(L);
 }
 </script>
