@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#c8202a">
+<meta name="color-scheme" content="light only">
 <title>Меню · Верная кулинария</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;700;800&display=swap" rel="stylesheet">
@@ -15,10 +16,10 @@ PICTURE: красная шапка с логотипом и крупным им�
 COLOUR and TYPE: крем #fbf3e4, красный #c8202a, жёлтый #f2c230, тёмный #1d1a17; Onest (близок к Gilroy).
 LAYOUT: шапка; липкая панель (поиск + разделы: на компьютере все кнопки видны, на телефоне — кнопка «Разделы» с листом); разделы; подвал.
 */
-:root{color-scheme:light dark;
---bg:light-dark(#fbf3e4,#1b1613);--card:light-dark(#fffaf1,#241d19);--ink:light-dark(#1d1a17,#f4ebdc);
---mute:light-dark(#7a6e62,#b4a796);--red:light-dark(#c8202a,#ef5a52);--yel:#f2c230;--line:light-dark(#e8dcc6,#3a302a)}
-:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+:root{color-scheme:light;
+--bg:#fbf3e4;--card:#fffaf1;--ink:#1d1a17;
+--mute:#7a6e62;--red:#c8202a;--yel:#f2c230;--line:#e8dcc6}
+
 *{box-sizing:border-box;min-width:0}
 body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 Onest,system-ui,sans-serif;overflow-x:clip;-webkit-text-size-adjust:100%}
 html{scroll-behavior:smooth}
